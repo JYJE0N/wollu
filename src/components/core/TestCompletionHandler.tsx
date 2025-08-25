@@ -121,12 +121,16 @@ export function useTestCompletionHandler() {
 
   // 테스트 완료 감지 (완전한 무한 루프 방지)
   useEffect(() => {
-    // 상태가 유효하지 않으면 아무것도 하지 않음
-    if (!isCompleted || !targetText || currentIndex < targetText.length) {
+    // 테스트가 완료되지 않았으면 아무것도 하지 않음
+    if (!isCompleted) {
       return;
     }
     
-    console.log('🏁 TestCompletionHandler: 테스트 완료 감지');
+    console.log('🏁 TestCompletionHandler: 테스트 완료 감지', {
+      isCompleted,
+      targetTextLength: targetText?.length,
+      currentIndex
+    });
     
     // 즉시 실행 (지연 없음)
     handleTestCompletion();

@@ -8,7 +8,6 @@ import {
 import { CharacterRenderer } from "./CharacterRenderer";
 import { SpaceRenderer } from "./SpaceRenderer";
 import { useDeviceContext, getTypingTextClassName } from "@/utils/deviceDetection";
-import { usePerformanceMonitor } from "@/utils/performanceMonitor";
 
 interface TextRendererProps {
   text: string;
@@ -38,8 +37,12 @@ export const TextRenderer = memo(function TextRenderer({
   const safeMistakes = Array.isArray(mistakes) ? mistakes : [];
   const safeIsPaused = Boolean(isPaused);
   const safeClassName = String(className || '');
-  // 성능 모니터링
-  usePerformanceMonitor('TextRenderer');
+  // 성능 모니터링 비활성화 (모바일 무한루프 방지)
+  // useEffect(() => {
+  //   if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+  //     performanceMonitor.recordRender('TextRenderer');
+  //   }
+  // });
   
   const containerRef = useRef<HTMLDivElement>(null);
   const currentElementRef = useRef<HTMLElement | null>(null);
@@ -84,22 +87,23 @@ export const TextRenderer = memo(function TextRenderer({
   
   // 모바일용 클래스명 메모이제이션 (함수 호출 최적화)
   const mobileTypingClassName = useMemo(() => {
+    if (!isClient) return 'typing-text-standardized mobile-typing-container';
     return `${getTypingTextClassName(deviceContext)} mobile-typing-container`;
-  }, [deviceContext]);
+  }, [deviceContext, isClient]);
   
   // 스타일 객체 메모이제이션 (참조 안정성 확보)
   const mobileWindowStyle = useMemo(() => ({
     position: "fixed" as const,
-    top: "calc(var(--header-height) + 6.5rem)",
+    top: "6rem",
     left: "1rem",
     right: "1rem",
-    minHeight: "8rem",
-    maxHeight: "calc(100vh - var(--header-height) - var(--footer-height) - 16rem)",
+    minHeight: "10rem",
+    maxHeight: "40vh", // 가상 키보드를 고려한 높이 (화면의 40%)
     overflow: "hidden" as const,
     zIndex: 40,
-    backgroundColor: "var(--color-surface)",
+    backgroundColor: "var(--color-surface, #ffffff)",
     borderRadius: "0.75rem",
-    border: "2px solid var(--color-border-primary)",
+    border: "2px solid var(--color-border-primary, #e5e7eb)",
     boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
   }), []);
   
@@ -134,118 +138,64 @@ export const TextRenderer = memo(function TextRenderer({
     }
   }, [safeText, characterStates]);
 
-  // 자동 스크롤 처리 - 모바일과 PC 다르게 처리 (성능 최적화)
+  // 자동 스크롤 처리 - 모바일 포함
   useEffect(() => {
-    // 텍스트가 완료된 경우 스크롤링 비활성화 (무한 루프 방지)
-    if (currentIndex >= text.length) {
+    // 클라이언트 사이드가 아니거나 텍스트가 없으면 스킵
+    if (!isClient || !safeText || safeCurrentIndex >= safeText.length) {
       return;
     }
 
-    let scrollTimeout: NodeJS.Timeout;
-    let rafId: number;
-
     const scrollToCurrentPosition = () => {
-      // 안전 가드 - DOM이 준비되지 않으면 즉시 반환
-      if (!textContainerRef.current || !containerRef.current) return;
+      if (!textContainerRef.current) return;
       
-      const targetIndex = currentIndex < 0 ? 0 : currentIndex;
+      const targetIndex = Math.max(0, safeCurrentIndex);
+      const element = textContainerRef.current.querySelector(`[data-index="${targetIndex}"]`) as HTMLElement;
       
-      try {
-        // DOM 선택자 최적화: ref 사용 (안전 가드 추가)
-        if (!currentElementRef.current || currentElementRef.current.getAttribute('data-index') !== targetIndex.toString()) {
-          const element = textContainerRef.current.querySelector(`[data-index="${targetIndex}"]`) as HTMLElement;
-          if (!element) return; // 요소가 없으면 안전하게 반환
-          currentElementRef.current = element;
-        }
-        
-        const currentElement = currentElementRef.current;
-        const textContainer = textContainerRef.current;
+      if (!element) return;
 
-        // 추가 안전 가드
-        if (!currentElement || !textContainer || !currentElement.getBoundingClientRect || !textContainer.getBoundingClientRect) {
-          return;
-        }
+      const container = textContainerRef.current;
+      const containerHeight = container.clientHeight;
+      if (containerHeight === 0) return;
+      
+      // 모바일과 PC 다른 스크롤 위치 설정
+      let targetPosition: number;
+      
+      if (isMobile) {
+        // 모바일: 가상 키보드를 고려하여 상단에 가깝게 (화면의 30% 위치)
+        targetPosition = containerHeight * 0.3;
+      } else {
+        // PC: 화면 중앙 근처 (33% 위치)
+        targetPosition = containerHeight * 0.33;
+      }
+      
+      const elementRect = element.getBoundingClientRect();
+      const containerRect = container.getBoundingClientRect();
+      
+      const relativeTop = elementRect.top - containerRect.top + container.scrollTop;
+      const targetScrollTop = Math.max(0, relativeTop - targetPosition);
+      
+      if (safeCurrentIndex <= 0) {
+        container.scrollTop = 0;
+      } else {
+        // 부드러운 스크롤 적용
         if (isMobile) {
-          // 모바일: 안전한 스크롤링
-          const windowHeight = 192;
-          const windowCenter = windowHeight / 2;
-
-          const textContainerRect = textContainer.getBoundingClientRect();
-          const elementRect = currentElement.getBoundingClientRect();
-
-          // 유효한 rect인지 확인
-          if (textContainerRect.width === 0 || elementRect.width === 0) {
-            return;
-          }
-
-          const relativeTop = elementRect.top - textContainerRect.top + textContainer.scrollTop;
-          const targetScrollTop = Math.max(0, relativeTop - windowCenter);
-
-          // scrollTop 설정 안전 가드
-          if (isFinite(targetScrollTop) && targetScrollTop >= 0) {
-            textContainer.scrollTop = targetScrollTop;
-          }
+          // 모바일에서는 즉시 스크롤 (성능 고려)
+          container.scrollTop = targetScrollTop;
         } else {
-          // PC: 안전한 스크롤링
-          const containerHeight = textContainer.clientHeight;
-          if (containerHeight === 0) return;
-          
-          const targetPosition = containerHeight * 0.33;
-
-          const textContainerRect = textContainer.getBoundingClientRect();
-          const elementRect = currentElement.getBoundingClientRect();
-
-          // 유효한 rect인지 확인
-          if (textContainerRect.width === 0 || elementRect.width === 0) {
-            return;
-          }
-
-          const relativeTop = elementRect.top - textContainerRect.top + textContainer.scrollTop;
-          const targetScrollTop = Math.max(0, relativeTop - targetPosition);
-
-          // scrollTop 설정 안전 가드
-          if (isFinite(targetScrollTop) && targetScrollTop >= 0) {
-            if (currentIndex <= 0) {
-              textContainer.scrollTop = 0;
-            } else {
-              textContainer.scrollTop = targetScrollTop;
-            }
-          }
+          // PC에서는 부드럽게
+          container.scrollTo({
+            top: targetScrollTop,
+            behavior: 'smooth'
+          });
         }
-      } catch (error) {
-        // 에러 발생 시 안전하게 무시 (무한 리렌더링 방지)
-        // console.error('TextRenderer scroll error:', error);
-        return;
       }
     };
 
-    // 쓰로틀링 최적화 (RAF 제거)
-    const throttleDelay = isMobile ? 16 : 8; // 성능 향상된 지연시간
-    
-    const throttledScroll = () => {
-      try {
-        if (scrollTimeout) clearTimeout(scrollTimeout);
-        scrollTimeout = setTimeout(() => {
-          // 컴포넌트가 여전히 마운트되어 있는지 확인
-          if (containerRef.current && textContainerRef.current) {
-            scrollToCurrentPosition();
-          }
-        }, throttleDelay);
-      } catch (error) {
-        // 쓰로틀링 에러도 안전하게 처리
-        return;
-      }
-    };
+    // 딜레이를 두고 스크롤 실행
+    const timeoutId = setTimeout(scrollToCurrentPosition, 50);
 
-    // 초기 실행도 안전하게 처리
-    if (currentIndex >= 0 && currentIndex < text.length) {
-      throttledScroll();
-    }
-
-    return () => {
-      if (scrollTimeout) clearTimeout(scrollTimeout);
-    };
-  }, [currentIndex, isPaused, isMobile]); // text 의존성 제거로 성능 향상
+    return () => clearTimeout(timeoutId);
+  }, [safeCurrentIndex, safeText, isMobile, isClient]); // 안전한 의존성만 사용
 
   // 텍스트 컨텐츠 안전 렌더링 (예외 시 기본 텍스트)
   const textContent = useMemo(() => {
@@ -376,18 +326,16 @@ export const TextRenderer = memo(function TextRenderer({
         className={`text-renderer ${safeClassName}`}
         ref={containerRef}
       >
-      {isMobile ? (
+      {isClient && isMobile ? (
         // 모바일: 고정 윈도우 방식
         <div
           className="fixed-text-window"
           style={mobileWindowStyle}
         >
           <div
-            ref={(el) => { 
-              try {
-                textContainerRef.current = el; 
-              } catch (error) {
-                // ref 설정 에러 안전 처리
+            ref={(el) => {
+              if (el) {
+                textContainerRef.current = el;
               }
             }}
             className="typing-text-container font-korean text-xl text-center"
@@ -410,8 +358,8 @@ export const TextRenderer = memo(function TextRenderer({
             width: "70%", // 뷰포트의 70%만 사용
             maxWidth: "800px", // 최대 너비 제한
             margin: "0 auto", // 중앙 정렬
-            // CSS 변수를 사용한 적응형 높이
-            height: "var(--window-height)",
+            // 고정 높이 설정 (CSS 변수 대신)
+            height: renderDimensions.containerHeight + 'px',
             overflow: "hidden",
             backgroundColor: "transparent",
             marginTop: "2rem",
@@ -448,11 +396,9 @@ export const TextRenderer = memo(function TextRenderer({
           />
 
           <div
-            ref={(el) => { 
-              try {
-                if (!textContainerRef.current) textContainerRef.current = el; 
-              } catch (error) {
-                // ref 설정 에러 안전 처리
+            ref={(el) => {
+              if (el) {
+                textContainerRef.current = el;
               }
             }}
             className="typing-text-container font-korean text-2xl text-center"
@@ -461,18 +407,18 @@ export const TextRenderer = memo(function TextRenderer({
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              // CSS 변수를 사용한 적응형 패딩
-              padding: "var(--text-container-padding-vertical) 2rem",
+              // 고정 패딩 설정
+              padding: "4rem 2rem",
               height: "100%",
-              // 텍스트 크기도 CSS 변수로 통일
-              fontSize: "var(--typing-font-size)",
+              // 고정 폰트 크기
+              fontSize: "1.5rem",
             }}
           >
             <div 
               className="flex flex-wrap justify-center items-baseline min-h-full"
               style={{
-                // CSS 변수를 사용한 라인 높이
-                lineHeight: "var(--typing-line-height)",
+                // 고정 라인 높이
+                lineHeight: "2.5",
                 letterSpacing: "0.02em", // 자간도 약간 추가
                 // 영화 크레딧 스타일을 위한 추가 스타일
                 textAlign: "center",

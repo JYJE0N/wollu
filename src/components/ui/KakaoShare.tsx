@@ -82,13 +82,6 @@ export function KakaoShare({
           },
         ],
         installTalk: true,
-        // 콜백 추가
-        success: (response: any) => {
-          console.log('✅ 카카오톡 공유 성공:', response);
-        },
-        fail: (error: any) => {
-          console.error('❌ 카카오톡 공유 실패:', error);
-        },
       });
     } catch (error) {
       console.error('❌ 카카오톡 공유 오류:', error);

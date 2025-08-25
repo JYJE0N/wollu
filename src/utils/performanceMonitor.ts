@@ -59,12 +59,14 @@ class PerformanceMonitor {
    * 비상 조치 - 페이지 새로고침이나 경고
    */
   private emergencyAction(componentName: string) {
-    // 모바일에서는 더 적극적인 조치
+    // 모바일에서는 경고만 출력 (새로고침 비활성화)
     const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
     
     if (isMobile) {
-      alert(`⚠️ 성능 문제 감지: ${componentName}\n\n페이지를 새로고침합니다.`);
-      window.location.reload();
+      console.error(`⚠️ 모바일 성능 문제 감지: ${componentName}`);
+      // alert와 reload 비활성화 - 무한 루프 방지
+      // alert(`⚠️ 성능 문제 감지: ${componentName}\n\n페이지를 새로고침합니다.`);
+      // window.location.reload();
     } else {
       console.error(`데스크톱에서 ${componentName} 성능 문제 감지됨`);
     }
@@ -111,10 +113,22 @@ export function usePerformanceMonitor(componentName: string) {
   performanceMonitor.recordRender(componentName);
 }
 
-// 개발 모드에서만 활성화
-if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-  // 5초마다 성능 보고서 출력
-  setInterval(() => {
-    console.log(performanceMonitor.getReport());
-  }, 5000);
-}
+// 성능 모니터링 자동 출력 비활성화 (모바일 성능 문제)
+// if (typeof window !== 'undefined' && typeof document !== 'undefined') {
+//   if (process.env.NODE_ENV === 'development') {
+//     // DOM 로드 후 실행
+//     if (document.readyState === 'loading') {
+//       document.addEventListener('DOMContentLoaded', () => {
+//         // 5초마다 성능 보고서 출력
+//         setInterval(() => {
+//           console.log(performanceMonitor.getReport());
+//         }, 5000);
+//       });
+//     } else {
+//       // 이미 로드됨
+//       setInterval(() => {
+//         console.log(performanceMonitor.getReport());
+//       }, 5000);
+//     }
+//   }
+// }

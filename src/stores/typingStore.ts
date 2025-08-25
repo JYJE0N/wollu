@@ -3,6 +3,7 @@ import { Keystroke, Mistake } from '@/types'
 import { isKoreanJamo } from '@/utils/koreanIME'
 // import { eventBus } from '@/utils/eventBus' // EventBus 제거 - 순환참조 방지
 import { typingEffectsManager } from '@/utils/typingEffects'
+import { useSettingsStore } from './settingsStore'
 
 interface TypingStore {
   // State
@@ -371,11 +372,11 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
     const updates = processKeystroke(state, key, expectedChar, isCorrect)
     set(updates)
     
-    // 마지막 글자 완료 로직도 제거 - 무한 루프 방지  
+    // 마지막 글자 완료 체크
     const newIndex = updates.currentIndex || state.currentIndex
     if (newIndex >= state.targetText.length) {
-      console.log('🏁 Test reached end - 자동 완료 비활성화')
-      // setTimeout(() => get().completeTest(), 50)  
+      console.log('🏁 Test reached end - completing test!')
+      setTimeout(() => get().completeTest(), 50)  
       return
     }
     
@@ -403,6 +404,19 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
       console.log(`🎯 단어 완성! ${state.completedWords} → ${newCompletedWords}`)
       set({ completedWords: newCompletedWords })
       newState.completedWords = newCompletedWords
+    }
+    
+    // 테스트 완료 체크 (추가)
+    const settingsState = useSettingsStore.getState()
+    
+    // 시간 기반 테스트는 TypingTimer에서 처리
+    // 단어 기반 테스트 완료 체크
+    if (settingsState.testMode === 'words') {
+      // 모든 텍스트를 타이핑했는지 확인
+      if (newState.currentIndex >= state.targetText.length) {
+        console.log('✅ Word-based test completed - all text typed!')
+        get().completeTest()
+      }
     }
     
     // 간단한 통계 계산

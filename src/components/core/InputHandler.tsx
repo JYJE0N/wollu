@@ -139,19 +139,43 @@ export function InputHandler({
     const target = event.target as HTMLInputElement
     const value = target.value
     
-    // 🔧 모바일에서는 간소화된 처리
+    // 🔧 모바일에서도 정확한 입력 처리
     if (mobileInfo.isMobile) {
-      const lastChar = value[value.length - 1]
-      if (lastChar && lastChar !== ' ') {
-        if (!testStarted) {
-          onTestStart()
-          setTestStarted(true)
-        }
-        onKeyPress(lastChar)
+      // IME 조합 중이면 무시 (composition 이벤트로 처리됨)
+      if (imeHandler.current.isComposing()) {
+        return
       }
-      // 입력 필드 정리 (모바일 성능 최적화)
-      if (value.length > 10) {
-        target.value = ''
+      
+      // 입력값이 있을 때만 처리
+      if (value.length > 0) {
+        // 마지막 입력된 부분만 처리 (이전 값과의 차이)
+        const prevValue = inputRef.current?.getAttribute('data-prev-value') || ''
+        const newInput = value.slice(prevValue.length)
+        
+        // 테스트 시작되지 않았으면 시작
+        if (!testStarted && !isCountingDown && !isActive) {
+          handleTestStart()
+        }
+        
+        // 활성화 상태에서만 입력 처리
+        const currentStore = useTypingStore.getState()
+        if (currentStore.isActive && !currentStore.isCountingDown) {
+          // 새로 입력된 문자들 처리
+          for (const char of newInput) {
+            // 완성된 한글이거나 한글이 아닌 경우만 처리
+            if (isCompletedKorean(char) || !isKoreanJamo(char)) {
+              onKeyPress(char)
+            }
+          }
+        }
+        
+        // 값이 너무 길면 정리
+        if (value.length > 5) {
+          target.value = ''
+          target.setAttribute('data-prev-value', '')
+        } else {
+          target.setAttribute('data-prev-value', value)
+        }
       }
       return
     }
@@ -319,17 +343,45 @@ export function InputHandler({
       // console.log('🎭 Composition ended:', event.data)
       
       const composedText = event.data || ''
+      
+      // 모바일에서는 직접 처리
+      if (mobileInfo.isMobile) {
+        imeHandler.current.endComposition(composedText)
+        setCompositionState(false, '')
+        onCompositionChange?.(false)
+        
+        // 테스트 시작 확인
+        if (!testStarted && composedText.length > 0) {
+          handleTestStart()
+        }
+        
+        // 활성화 상태 확인
+        const currentStore = useTypingStore.getState()
+        if (currentStore.isActive && !currentStore.isCountingDown && composedText) {
+          // 완성된 한글 문자만 처리 (composition에서 온 전체 텍스트)
+          for (const char of composedText) {
+            // 완성된 한글이거나 한글 자모가 아닌 경우만
+            if (isCompletedKorean(char) || !isKoreanJamo(char)) {
+              onKeyPress(char)
+            }
+          }
+        }
+        
+        // Clear input field and reset prev value
+        if (inputRef.current) {
+          inputRef.current.value = ''
+          inputRef.current.setAttribute('data-prev-value', '')
+        }
+        return
+      }
+      
+      // 데스크톱 기존 로직
       const newChars = imeHandler.current.endComposition(composedText)
       setCompositionState(false, '')
       onCompositionChange?.(false)
       
-      // 모바일 환경 감지
-      const mobileDetection = detectMobile()
-      const isMobile = mobileDetection?.isMobile ?? false
-      
       // 데스크톱에서만 자동 시작
-      if (!testStarted && newChars.length > 0 && !isMobile) {
-        // console.log('🚀 Auto-starting test from IME (desktop only)')
+      if (!testStarted && newChars.length > 0) {
         handleTestStart()
       }
       
@@ -345,7 +397,7 @@ export function InputHandler({
     } catch (error) {
       console.error('❌ Error in handleCompositionEnd:', error)
     }
-  }, [testStarted, onCompositionChange])
+  }, [testStarted, onCompositionChange, mobileInfo.isMobile, handleTestStart, onKeyPress, processCharacter, setCompositionState])
 
   // Handle click to focus and start test (모바일 최적화)
   const handleContainerClick = useCallback(() => {
