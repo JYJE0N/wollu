@@ -22,6 +22,7 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
   const [userAnalysis, setUserAnalysis] = useState<UserAnalysis | null>(null);
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
   useEffect(() => {
     if (isLoading || !recentTests) return;
@@ -169,32 +170,32 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
         </div>
       </div>
 
-      <div className="stats-card-content space-y-6">
-        {/* 사용자 분석 요약 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-4 rounded-lg" 
+      <div className="stats-card-content space-y-4">
+        {/* 사용자 분석 요약 - 모바일 최적화 */}
+        <div className={`grid ${isMobile ? 'grid-cols-3' : 'grid-cols-1 md:grid-cols-3'} gap-3 p-3 rounded-lg`}
              style={{ backgroundColor: 'var(--color-background-elevated)' }}>
           <div className="text-center">
-            <div className="stats-metric-medium" style={{ color: 'var(--color-interactive-primary)' }}>
+            <div className={`${isMobile ? 'text-xl font-bold' : 'stats-metric-medium'}`} style={{ color: 'var(--color-interactive-primary)' }}>
               {Math.round(userAnalysis.averageCPM)}
             </div>
-            <div className="stats-caption">평균 CPM</div>
+            <div className={`${isMobile ? 'text-xs' : 'stats-caption'}`}>평균 CPM</div>
           </div>
           <div className="text-center">
-            <div className="stats-metric-medium" style={{ color: 'var(--color-feedback-success)' }}>
+            <div className={`${isMobile ? 'text-xl font-bold' : 'stats-metric-medium'}`} style={{ color: 'var(--color-feedback-success)' }}>
               {userAnalysis.averageAccuracy.toFixed(1)}%
             </div>
-            <div className="stats-caption">평균 정확도</div>
+            <div className={`${isMobile ? 'text-xs' : 'stats-caption'}`}>평균 정확도</div>
           </div>
           <div className="text-center">
-            <div className="stats-metric-medium" style={{ color: 'var(--color-feedback-warning)' }}>
+            <div className={`${isMobile ? 'text-xl font-bold' : 'stats-metric-medium'}`} style={{ color: 'var(--color-feedback-warning)' }}>
               {userAnalysis.averageConsistency.toFixed(1)}%
             </div>
-            <div className="stats-caption">평균 일관성</div>
+            <div className={`${isMobile ? 'text-xs' : 'stats-caption'}`}>평균 일관성</div>
           </div>
         </div>
 
-        {/* 트렌드 및 분석 */}
-        <div className="flex items-center gap-4 p-4 rounded-lg border-l-4"
+        {/* 트렌드 및 분석 - 모바일 최적화 */}
+        <div className={`${isMobile ? 'p-3' : 'p-4'} rounded-lg border-l-4`}
              style={{ 
                backgroundColor: 'var(--color-background-elevated)',
                borderLeftColor: userAnalysis.recentTrend === 'improving' ? 'var(--color-feedback-success)' :
@@ -202,19 +203,19 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
                                 'var(--color-interactive-primary)'
              }}>
           <div>
-            <div className="font-semibold mb-1" style={{ color: 'var(--color-text-primary)' }}>
-              최근 성능 트렌드: {
-                userAnalysis.recentTrend === 'improving' ? '📈 개선 중' :
-                userAnalysis.recentTrend === 'declining' ? '📉 하락 중' :
-                '📊 안정적'
+            <div className={`${isMobile ? 'text-sm' : ''} font-semibold mb-1`} style={{ color: 'var(--color-text-primary)' }}>
+              최근 트렌드: {
+                userAnalysis.recentTrend === 'improving' ? '개선 중' :
+                userAnalysis.recentTrend === 'declining' ? '하락 중' :
+                '안정적'
               }
             </div>
-            <div className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+            <div className={`${isMobile ? 'text-xs' : 'text-sm'}`} style={{ color: 'var(--color-text-secondary)' }}>
               {userAnalysis.strengthAreas.length > 0 && (
                 <div>강점: {userAnalysis.strengthAreas.join(', ')}</div>
               )}
               {userAnalysis.improvementAreas.length > 0 && (
-                <div>개선 필요: {userAnalysis.improvementAreas.join(', ')}</div>
+                <div>개선: {userAnalysis.improvementAreas.join(', ')}</div>
               )}
             </div>
           </div>
@@ -227,26 +228,31 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
           {recommendations.map((recommendation, index) => (
             <div 
               key={index}
-              className="p-4 rounded-lg border transition-all duration-200 hover:shadow-md"
+              className={`${isMobile ? 'p-3' : 'p-4'} rounded-lg border transition-all duration-200 hover:shadow-md`}
               style={{ 
                 backgroundColor: 'var(--color-background-elevated)',
                 borderColor: 'var(--color-border)'
               }}
             >
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex items-start gap-3 flex-grow">
-                  <div className="p-2 rounded-lg" 
-                       style={{ backgroundColor: `${getPriorityColor(recommendation.priority)}20` }}>
-                    {getTypeIcon(recommendation.type)}
-                  </div>
+              <div className={`flex ${isMobile ? 'flex-col gap-3' : 'items-start justify-between gap-4'}`}>
+                <div className={`flex ${isMobile ? 'flex-col' : 'items-start'} gap-3 flex-grow`}>
+                  {!isMobile && (
+                    <div className="p-2 rounded-lg" 
+                         style={{ backgroundColor: `${getPriorityColor(recommendation.priority)}20` }}>
+                      {getTypeIcon(recommendation.type)}
+                    </div>
+                  )}
                   
                   <div className="flex-grow">
-                    <div className="flex items-center gap-2 mb-2">
-                      <h4 className="font-semibold" style={{ color: 'var(--color-text-primary)' }}>
-                        {recommendation.title}
-                      </h4>
+                    <div className={`flex ${isMobile ? 'flex-col gap-1' : 'items-center gap-2'} mb-2`}>
+                      <div className="flex items-center gap-2">
+                        {isMobile && getTypeIcon(recommendation.type)}
+                        <h4 className={`font-semibold ${isMobile ? 'text-sm' : ''}`} style={{ color: 'var(--color-text-primary)' }}>
+                          {recommendation.title}
+                        </h4>
+                      </div>
                       <span 
-                        className="px-2 py-1 rounded text-xs font-semibold"
+                        className={`${isMobile ? 'self-start' : ''} px-2 py-1 rounded text-xs font-semibold`}
                         style={{ 
                           backgroundColor: `${getPriorityColor(recommendation.priority)}20`,
                           color: getPriorityColor(recommendation.priority)
@@ -256,30 +262,32 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
                       </span>
                     </div>
                     
-                    <p className="text-sm mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+                    <p className={`${isMobile ? 'text-xs' : 'text-sm'} mb-3`} style={{ color: 'var(--color-text-secondary)' }}>
                       {recommendation.description}
                     </p>
                     
-                    <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--color-text-tertiary)' }}>
+                    <div className={`flex ${isMobile ? 'flex-wrap' : 'items-center'} gap-3 text-xs`} style={{ color: 'var(--color-text-tertiary)' }}>
                       <div className="flex items-center gap-1">
                         <IoTrendingUp className="w-3 h-3" />
-                        <span>예상 개선: {Math.round(recommendation.estimatedImpact)}%</span>
+                        <span>개선: {Math.round(recommendation.estimatedImpact)}%</span>
                       </div>
                       <div className="flex items-center gap-1">
                         <IoTime className="w-3 h-3" />
-                        <span>소요 시간: {recommendation.expectedDuration}분</span>
+                        <span>{recommendation.expectedDuration}분</span>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <span>난이도:</span>
-                        <span className="flex">{getDifficultyStars(recommendation.difficultyLevel)}</span>
-                      </div>
+                      {!isMobile && (
+                        <div className="flex items-center gap-1">
+                          <span>난이도:</span>
+                          <span className="flex">{getDifficultyStars(recommendation.difficultyLevel)}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
                 
                 <button
                   onClick={() => handleStartPractice(recommendation)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95"
+                  className={`flex items-center justify-center gap-2 ${isMobile ? 'w-full px-4 py-3' : 'px-4 py-2'} rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95`}
                   style={{
                     backgroundColor: 'var(--color-interactive-primary)',
                     color: 'var(--color-text-on-primary)',
@@ -294,13 +302,15 @@ export function RecommendationSection({ className = "" }: RecommendationSectionP
           ))}
         </div>
 
-        {/* 추가 안내 */}
-        <div className="text-center p-4 rounded-lg" 
-             style={{ backgroundColor: 'var(--color-interactive-primary)15' }}>
-          <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
-            💡 AI 추천은 최근 20회 테스트 데이터를 기반으로 합니다. 더 많은 연습을 통해 더 정확한 추천을 받아보세요!
-          </p>
-        </div>
+        {/* 추가 안내 - 모바일 최적화 */}
+        {!isMobile && (
+          <div className="text-center p-4 rounded-lg" 
+               style={{ backgroundColor: 'var(--color-interactive-primary)15' }}>
+            <p className="text-sm" style={{ color: 'var(--color-text-secondary)' }}>
+              AI 추천은 최근 20회 테스트 데이터를 기반으로 합니다.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );

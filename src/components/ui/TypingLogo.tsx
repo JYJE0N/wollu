@@ -46,7 +46,7 @@ export function TypingLogo({ className = '' }: TypingLogoProps) {
   }, []);
 
   return (
-    <Link href="/" className={`flex items-center hover:opacity-80 transition-opacity cursor-pointer ${className}`}>
+    <Link href="/" className={`flex items-center hover:opacity-80 transition-opacity cursor-pointer ${className}`} replace>
       <h1 className="text-2xl font-bold text-text-primary flex items-baseline">
         <span>{displayedText}</span>
         <span 

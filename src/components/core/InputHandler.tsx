@@ -29,6 +29,7 @@ export function InputHandler({
   className = ''
 }: InputHandlerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
+  const hiddenInputRef = useRef<HTMLInputElement>(null)
   const imeHandler = useRef(new IMEHandler())
   const processedInputRef = useRef<Set<string>>(new Set())
   const browserType = useRef(getBrowserType())
@@ -45,7 +46,9 @@ export function InputHandler({
     return {
       isMobile: detection?.isMobile ?? false,
       isIOS: detection?.isIOS ?? false,
-      isAndroid: detection?.isAndroid ?? false
+      isAndroid: detection?.isAndroid ?? false,
+      isIPad: detection?.isIPad ?? false,
+      isIPhone: detection?.isIPhone ?? false
     }
   }, [])
 
@@ -67,12 +70,25 @@ export function InputHandler({
         // iOS와 Android 모두 type="text" 설정 (iOS 키보드 활성화 필수)
         input.setAttribute('type', 'text')
         
-        // iOS 전용 추가 설정
+        // iOS 전용 추가 설정 (iPad 특별 처리 포함)
         if (isIOS) {
-          // iOS는 contenteditable 속성이 키보드 활성화에 도움
-          input.setAttribute('contenteditable', 'true')
           // iOS 자동완성 관련 추가 속성
           input.setAttribute('autocapitalize', 'off')
+          input.setAttribute('data-testid', 'typing-input')
+          // iOS Safari 호환성을 위한 추가 속성
+          input.setAttribute('webkit-user-select', 'text')
+          
+          // iPad 전용 추가 설정
+          if (mobileInfo.isIPad) {
+            // iPad는 키보드 활성화가 더 까다로우므로 추가 속성 필요
+            input.setAttribute('enterkeyhint', 'done')
+            input.setAttribute('pattern', '[\\s\\S]*') // 모든 문자 허용
+            // iPad Safari에서 키보드 활성화를 위한 강제 편집 가능 상태
+            input.setAttribute('contenteditable', 'true')
+            input.style.webkitUserSelect = 'text'
+            // TypeScript에서 인식하지 못하는 webkit 속성은 setAttribute로 설정
+            input.style.setProperty('-webkit-touch-callout', 'default')
+          }
         }
         
         // 포커스 시도 (재시도 횟수 제한으로 무한루프 방지)
@@ -104,8 +120,16 @@ export function InputHandler({
       onTestStart()
       setTestStarted(true)
       setShowStartHint(false)
+      
+      // iOS에서 테스트 시작 시 hiddenInput으로 포커스 이동
+      if (mobileInfo.isIOS && hiddenInputRef.current) {
+        setTimeout(() => {
+          hiddenInputRef.current?.focus()
+          console.log('📱 iOS: 숨겨진 input으로 포커스 이동')
+        }, 100)
+      }
     }
-  }, [testStarted, isActive, onTestStart])
+  }, [testStarted, isActive, onTestStart, mobileInfo.isIOS])
 
   // Process character input (unified handler)
   const processCharacter = useCallback((char: string) => {
@@ -428,28 +452,20 @@ export function InputHandler({
     }
     
     // 모바일 환경 감지
-    const { isMobile, isIOS } = mobileInfo
+    const { isMobile, isIOS, isIPad } = mobileInfo
     
     if (isMobile && !testStarted && !isActive) {
       // 모바일에서도 클릭으로 시작 가능하도록 변경
       // console.log('📱 Mobile: Starting test from click')
       
       // iOS에서는 사용자 인터랙션 직후에 포커스해야 키보드 활성화
-      if (isIOS && e) {
-        // 이벤트 전파 방지
-        e.preventDefault()
-        e.stopPropagation()
+      if (isIOS && e && inputRef.current) {
+        // 이벤트 전파 방지하지 않고 자연스러운 터치 이벤트 유지
         
-        // 즉시 포커스 (iOS는 터치 이벤트 컨텍스트에서만 키보드 활성화)
-        if (inputRef.current) {
-          inputRef.current.focus()
-          // 포커스 후 짧은 지연으로 키보드 안정화
-          setTimeout(() => {
-            if (inputRef.current) {
-              inputRef.current.click()
-            }
-          }, 10)
-        }
+        const input = inputRef.current
+        
+        // iOS는 화면 하단의 별도 input을 사용하므로 단순 포커스만
+        input.focus()
       } else {
         maintainFocus()
       }
@@ -610,42 +626,162 @@ export function InputHandler({
       style={{ pointerEvents: 'auto' }}
       onClick={handleContainerClick}
     >
-      {/* Hidden input for IME */}
-      <input
-        ref={inputRef}
-        type="text"
-        className="absolute inset-0 w-full h-full"
-        style={{ 
-          // iOS를 위해 opacity 대신 시각적으로만 숨김
-          caretColor: 'transparent',
-          color: 'transparent',
-          backgroundColor: 'transparent',
-          border: 'none',
-          outline: 'none',
-          fontSize: '16px', // iOS 줌 방지를 위해 16px 이상 설정
-          zIndex: 50,
-          cursor: 'text',
-          pointerEvents: 'auto',
-          // iOS 키보드 활성화를 위한 추가 스타일
-          WebkitUserSelect: 'text',
-          userSelect: 'text'
-        }}
-        onClick={handleContainerClick}
-        onInput={handleInput}
-        onKeyDown={handleKeyDown}
-        onCompositionStart={handleCompositionStart}
-        onCompositionUpdate={handleCompositionUpdate}
-        onCompositionEnd={handleCompositionEnd}
-        disabled={disabled || isCompleted}
-        autoComplete="off"
-        autoCorrect="off"
-        autoCapitalize="off"
-        spellCheck={false}
-        tabIndex={0}
-        aria-label="Typing input field"
-        // iOS 키보드 활성화를 위한 추가 속성
-        inputMode="text"
-      />
+      {/* 모바일 키보드 활성화를 위한 실제 보이는 input (투명도 조정) */}
+      {mobileInfo.isMobile ? (
+        <>
+          {/* iOS는 텍스트와 완전히 분리된 고정 위치 input 필요 */}
+          {(mobileInfo.isIOS || mobileInfo.isIPad || mobileInfo.isIPhone) ? (
+            <>
+              {/* iOS 전용: 화면 하단 고정 input */}
+              <div 
+                className="fixed bottom-4 left-4 right-4 z-50 flex flex-col items-center gap-2"
+                style={{
+                  display: testStarted || isActive ? 'none' : 'flex'
+                }}
+              >
+                <div className="text-center text-sm px-4" style={{ color: 'var(--color-text-secondary)' }}>
+                  아래 입력창을 터치하여 타이핑을 시작하세요
+                </div>
+                <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="여기를 터치하세요"
+                  className="w-full max-w-sm h-14 px-4 text-center rounded-xl border-2 text-lg font-medium shadow-lg"
+                  style={{ 
+                    fontSize: '16px', // iOS 줌 방지
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 0.6)',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    backdropFilter: 'blur(10px)',
+                    // iOS 터치 최적화
+                    WebkitUserSelect: 'text',
+                    userSelect: 'text',
+                    WebkitAppearance: 'none',
+                    touchAction: 'manipulation'
+                  }}
+                  onClick={handleContainerClick}
+                  onFocus={() => {
+                    if (!testStarted && !isActive) {
+                      handleTestStart()
+                    }
+                  }}
+                  onInput={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionUpdate={handleCompositionUpdate}
+                  onCompositionEnd={handleCompositionEnd}
+                  disabled={disabled || isCompleted}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  inputMode="text"
+                  data-testid="ios-typing-input"
+                />
+              </div>
+              
+              {/* iOS 타이핑 중 숨겨진 input */}
+              {(testStarted || isActive) && (
+                <input
+                  ref={hiddenInputRef}
+                  type="text"
+                  className="fixed bottom-0 left-0 w-1 h-1 opacity-0"
+                  style={{ 
+                    fontSize: '16px',
+                    pointerEvents: 'auto',
+                    zIndex: 10
+                  }}
+                  onInput={handleInput}
+                  onKeyDown={handleKeyDown}
+                  onCompositionStart={handleCompositionStart}
+                  onCompositionUpdate={handleCompositionUpdate}
+                  onCompositionEnd={handleCompositionEnd}
+                  disabled={disabled || isCompleted}
+                  autoComplete="off"
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  inputMode="text"
+                  data-testid="ios-hidden-input"
+                />
+              )}
+            </>
+          ) : (
+            // 안드로이드용 기존 방식
+            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+              <input
+                  ref={inputRef}
+                  type="text"
+                  placeholder="터치하여 타이핑을 시작하세요"
+                  className="w-full h-12 px-4 text-center rounded-lg border-2"
+                  style={{ 
+                    fontSize: '16px',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'var(--color-interactive-primary)',
+                    color: 'var(--color-text-primary)',
+                    outline: 'none',
+                    zIndex: 60,
+                    // 타이핑 시작 후에는 거의 숨김
+                    opacity: testStarted || isActive ? 0.05 : 1,
+                    pointerEvents: 'auto',
+                    transition: 'opacity 0.3s ease',
+                    WebkitUserSelect: 'text',
+                    userSelect: 'text'
+                  }}
+            onClick={handleContainerClick}
+            onFocus={() => {
+              if (!testStarted && !isActive) {
+                handleTestStart()
+              }
+            }}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            onCompositionStart={handleCompositionStart}
+            onCompositionUpdate={handleCompositionUpdate}
+            onCompositionEnd={handleCompositionEnd}
+            disabled={disabled || isCompleted}
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck={false}
+            inputMode="text"
+            data-testid="android-typing-input"
+              />
+            </div>
+          )}
+        </>
+      ) : (
+        // 데스크톱용 숨김 input
+        <input
+          ref={inputRef}
+          type="text"
+          className="absolute inset-0 w-full h-full opacity-0"
+          style={{ 
+            caretColor: 'transparent',
+            outline: 'none',
+            fontSize: '16px',
+            zIndex: 50,
+            cursor: 'text',
+            pointerEvents: 'auto'
+          }}
+          onClick={handleContainerClick}
+          onInput={handleInput}
+          onKeyDown={handleKeyDown}
+          onCompositionStart={handleCompositionStart}
+          onCompositionUpdate={handleCompositionUpdate}
+          onCompositionEnd={handleCompositionEnd}
+          disabled={disabled || isCompleted}
+          autoComplete="off"
+          autoCorrect="off"
+          autoCapitalize="off"
+          spellCheck={false}
+          tabIndex={0}
+          aria-label="Typing input field"
+          inputMode="text"
+          data-testid="desktop-typing-input"
+        />
+      )}
       
     </div>
   )

@@ -81,16 +81,23 @@ export function useTestCompletionHandler() {
 
       // 티어 승급 체크 (UI 관련이므로 여기서 처리)
       if (totalTests >= 5) {
+        // 현재 실제 평균값 기반 티어 계산
         const currentTier = defaultTierSystem.calculateCurrentTier({
           averageCPM,
           averageAccuracy,
           averageConsistency: averageConsistency || 0,
           totalTests
         });
+        
+        // 새로운 테스트 결과를 포함한 예상 평균값 계산
+        const newAverageCPM = ((averageCPM * totalTests) + liveStats.cpm) / (totalTests + 1);
+        const newAverageAccuracy = ((averageAccuracy * totalTests) + liveStats.accuracy) / (totalTests + 1);
+        const newAverageConsistency = ((averageConsistency * totalTests) + (liveStats.consistency || 0)) / (totalTests + 1);
+        
         const newTier = defaultTierSystem.calculateCurrentTier({
-          averageCPM: liveStats.cpm,
-          averageAccuracy: liveStats.accuracy,
-          averageConsistency: liveStats.consistency || 0,
+          averageCPM: newAverageCPM,
+          averageAccuracy: newAverageAccuracy,
+          averageConsistency: newAverageConsistency,
           totalTests: totalTests + 1
         });
 

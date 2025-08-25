@@ -27,11 +27,14 @@ export function TierSection({
 }: TierSectionProps) {
   const { averageSpeed } = useUserProgressStore();
 
+  // userProgressStore에서 실제 통계 가져오기
+  const { averageAccuracy, averageConsistency } = useUserProgressStore();
+  
   // 현재 사용자의 티어 정보 계산
   const currentStats = {
     averageCPM: primaryMetric === "cpm" ? bestCPM || 0 : averageSpeed || 0,
-    averageAccuracy: 90, // 임시값 - 실제로는 평균 정확도 사용
-    averageConsistency: 80, // 임시값 - 실제로는 평균 일관성 사용
+    averageAccuracy: averageAccuracy || 90, // 실제 평균 정확도 사용
+    averageConsistency: averageConsistency || 80, // 실제 평균 일관성 사용
     totalTests: totalTests || 0,
   };
 
@@ -103,21 +106,6 @@ export function TierSection({
             </div>
           )}
 
-          {/* 재도전 버튼 */}
-          <div className="flex justify-center mt-6">
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="flex items-center gap-2 px-6 py-2 rounded-lg font-semibold transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: "var(--color-interactive-primary)",
-                color: "var(--color-text-on-primary)",
-                boxShadow: "var(--chart-shadow-medium)",
-              }}
-            >
-              <IoPlay className="w-4 h-4" />
-              재도전
-            </button>
-          </div>
         </div>
       </div>
 

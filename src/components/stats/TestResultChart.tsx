@@ -794,20 +794,6 @@ export function TestResultChart({
 
       {/* 액션 버튼들 */}
       <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
-        {/* 재도전 버튼 */}
-        <button
-          onClick={() => (window.location.href = "/")}
-          className="flex items-center justify-center gap-2 px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 active:scale-95"
-          style={{
-            backgroundColor: themeColors.primary,
-            color: "white",
-            boxShadow: "var(--chart-shadow-heavy)",
-          }}
-        >
-          <IoPlay className="w-5 h-5" />
-          재도전
-        </button>
-
         {/* 공유 버튼 */}
         <button
           onClick={handleShare}

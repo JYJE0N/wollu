@@ -71,38 +71,40 @@ export function TypingEngine({ className = "" }: TypingEngineProps) {
   // 전역 이벤트 처리는 InputHandler에서 담당
 
   return (
-    <TypingTestUI
-      // 상태 전달
-      targetText={controller.targetText}
-      currentIndex={controller.currentIndex}
-      userInput={controller.userInput}
-      mistakes={controller.mistakes.map(m => m.position)}
-      
-      // 타이머 관련
-      currentTime={timer.currentTime}
-      
-      // 완료 처리 관련 - getWordProgress 제거됨
-      showPromotionModal={showPromotionModal}
-      promotionData={promotionData}
-      closePromotionModal={closePromotionModal}
-      handleContinueTest={handleContinueTest}
-      handleViewStats={handleViewStats}
-      
-      // 언어 감지 관련
-      languageHint={controller.languageHint}
-      setLanguageHint={controller.setLanguageHint}
-      
-      // 액션 핸들러 전달
-      onStart={controller.handleStart}
-      onRestart={controller.handleRestart}
-      onKeyPress={controller.handleKeyPress}
-      onBackspace={controller.handleBackspace}
-      onPause={controller.pauseTest}
-      onResume={controller.resumeTest}
-      onStop={controller.stopTest}
-      onTestStart={controller.handleStart}
-      
-      className={className}
-    />
+    <div data-testmode={useSettingsStore.getState().testMode} data-testtarget={useSettingsStore.getState().testTarget}>
+      <TypingTestUI
+        // 상태 전달
+        targetText={controller.targetText}
+        currentIndex={controller.currentIndex}
+        userInput={controller.userInput}
+        mistakes={controller.mistakes.map(m => m.position)}
+        
+        // 타이머 관련
+        currentTime={timer.currentTime}
+        
+        // 완료 처리 관련 - getWordProgress 제거됨
+        showPromotionModal={showPromotionModal}
+        promotionData={promotionData}
+        closePromotionModal={closePromotionModal}
+        handleContinueTest={handleContinueTest}
+        handleViewStats={handleViewStats}
+        
+        // 언어 감지 관련
+        languageHint={controller.languageHint}
+        setLanguageHint={controller.setLanguageHint}
+        
+        // 액션 핸들러 전달
+        onStart={controller.handleStart}
+        onRestart={controller.handleRestart}
+        onKeyPress={controller.handleKeyPress}
+        onBackspace={controller.handleBackspace}
+        onPause={controller.pauseTest}
+        onResume={controller.resumeTest}
+        onStop={controller.stopTest}
+        onTestStart={controller.handleStart}
+        
+        className={className}
+      />
+    </div>
   );
 }

@@ -189,6 +189,7 @@ export const useUserProgressStore = create<UserProgressStore>()(
             console.log('🔌 Offline userId:', userId)
             try {
               localStorage.setItem('ktypes-user-id', userId || '')
+              console.log('✅ 오프라인 userId localStorage에 저장됨:', userId)
             } catch (error) {
               console.warn('localStorage write failed:', error)
             }
@@ -392,7 +393,7 @@ export const useUserProgressStore = create<UserProgressStore>()(
         // 스트릭 업데이트
         get().updateStreak()
 
-          // 서버에 저장
+          // 서버에 저장 (오프라인 모드에서도 로컬 저장은 완료됨)
           const currentState = get();
           const { userId } = currentState;
           if (userId && !userId.startsWith('offline-')) {
@@ -406,6 +407,8 @@ export const useUserProgressStore = create<UserProgressStore>()(
               console.error('❌ UserProgressStore: 서버 저장 실패', error);
               // 서버 저장 실패해도 로컬은 유지
             }
+          } else {
+            console.log('📱 UserProgressStore: 오프라인 모드 - localStorage 저장만 수행');
           }
 
           console.log('✅ UserProgressStore: recordTest 완료');

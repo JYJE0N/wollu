@@ -8,6 +8,8 @@ import {
 import { CharacterRenderer } from "./CharacterRenderer";
 import { SpaceRenderer } from "./SpaceRenderer";
 import { useDeviceContext, getTypingTextClassName } from "@/utils/deviceDetection";
+import { initResponsiveLineHeight } from "@/utils/responsiveLineHeight";
+import { setupIOSKeyboardDetection, detectMobile } from "@/utils/mobileDetection";
 
 interface TextRendererProps {
   text: string;
@@ -50,6 +52,40 @@ export const TextRenderer = memo(function TextRenderer({
   const deviceContext = useDeviceContext();
   const { isMobile } = deviceContext;
   
+  // 반응형 줄간격 초기화 및 디버깅
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    
+    // 반응형 줄간격 시스템 초기화
+    const cleanup = initResponsiveLineHeight({
+      mobile: 1.3,           // 모바일 세로: 매우 촘촘하게
+      tablet: 1.4,           // 태블릿 세로: 촘촘하게 
+      tabletLandscape: 1.2,  // 태블릿 가로 (갤럭시탭 등) - 극도로 촘촘하게
+      desktop: 1.4           // 데스크톱: 촘촘하게
+    });
+    
+    // 단어 25개 모드 디버깅용 콘솔 로그
+    const checkLineHeight = () => {
+      const currentMode = document.querySelector('[data-testmode]')?.getAttribute('data-testmode');
+      const currentTarget = document.querySelector('[data-testtarget]')?.getAttribute('data-testtarget');
+      const actualLineHeight = getComputedStyle(document.documentElement).getPropertyValue('--typing-line-height');
+      
+      if (currentMode === 'words' && currentTarget === '25') {
+        console.log('🔍 단어 25개 모드 디버깅:', {
+          mode: currentMode,
+          target: currentTarget,
+          cssLineHeight: actualLineHeight,
+          textLength: safeText.length,
+          wordCount: safeText.split(' ').length
+        });
+      }
+    };
+    
+    setTimeout(checkLineHeight, 100);
+    
+    return cleanup;
+  }, [safeText]);
+  
   // SSR-CSR 일치를 위한 클라이언트 전용 상태
   const [isClient, setIsClient] = useState(false);
   const [renderDimensions, setRenderDimensions] = useState({
@@ -58,7 +94,10 @@ export const TextRenderer = memo(function TextRenderer({
     isMobileViewport: false
   });
   
-  // DOM 계산은 useEffect에서만 수행
+  // iOS 가상키보드 상태
+  const [isIOSKeyboardVisible, setIsIOSKeyboardVisible] = useState(false);
+  
+  // DOM 계산 및 iOS 키보드 감지 설정
   useEffect(() => {
     try {
       setIsClient(true);
@@ -85,6 +124,25 @@ export const TextRenderer = memo(function TextRenderer({
     }
   }, []);
   
+  // iOS 가상키보드 감지 설정
+  useEffect(() => {
+    const mobileDetection = detectMobile();
+    if (!mobileDetection?.isIOS) return;
+    
+    const cleanup = setupIOSKeyboardDetection(
+      () => {
+        setIsIOSKeyboardVisible(true);
+        console.log('📱 iOS 가상키보드 활성화됨');
+      },
+      () => {
+        setIsIOSKeyboardVisible(false);
+        console.log('📱 iOS 가상키보드 비활성화됨');
+      }
+    );
+    
+    return cleanup;
+  }, []);
+  
   // 모바일용 클래스명 메모이제이션 (함수 호출 최적화)
   const mobileTypingClassName = useMemo(() => {
     if (!isClient) return 'typing-text-standardized mobile-typing-container';
@@ -96,7 +154,7 @@ export const TextRenderer = memo(function TextRenderer({
     // 텍스트 길이에 따른 예상 높이 계산 - 더 유연하게
     const textLength = safeText.length;
     const estimatedLines = Math.ceil(textLength / 35); // 약 35자 단위로 줄 계산
-    const lineHeight = 2.4; // rem 단위
+    const lineHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--typing-line-height') || '1.4') * 1.5; // CSS 변수 기반 계산
     const contentHeight = Math.max(8, Math.min(40, estimatedLines * lineHeight)); // 8rem~40rem 사이로 더 유연하게
     
     return {
@@ -107,14 +165,18 @@ export const TextRenderer = memo(function TextRenderer({
       marginRight: "0.75rem",
       minHeight: "8rem", // 최소 높이를 더 낮게
       height: "auto", // 자동 높이로 변경
-      maxHeight: "calc(75vh - var(--header-height, 4rem))", // 더 높은 최대 높이
+      maxHeight: deviceContext.isMobile && (deviceContext as any).isIOS 
+        ? (isIOSKeyboardVisible 
+          ? "calc(30vh - var(--header-height, 4rem))" // iOS 키보드 활성화 시: 더욱 낮게
+          : "calc(50vh - var(--header-height, 4rem))") // iOS 키보드 비활성화 시
+        : "calc(75vh - var(--header-height, 4rem))", // 다른 환경: 기존 값
       overflow: "hidden" as const,
       backgroundColor: "transparent", // 배경 제거
       borderRadius: "0", // 모서리 둥글기 제거
       boxShadow: "none", // 그림자 제거
       transition: "max-height 0.3s ease-in-out", // 높이 전환
     };
-  }, [safeText.length]); // 텍스트 길이 변경 시 재계산
+  }, [safeText.length, deviceContext.isMobile, isIOSKeyboardVisible]); // iOS 키보드 상태 변경 시 재계산
   
   // 모바일 텍스트 컨테이너 스타일 (콘텐츠 적응형)
   const mobileTextContainerStyle = useMemo(() => {
@@ -319,7 +381,8 @@ export const TextRenderer = memo(function TextRenderer({
             style={{ 
               padding: '2rem 1rem',
               minHeight: '4rem',
-              wordBreak: 'break-all'
+              wordBreak: 'break-all',
+              lineHeight: 'var(--typing-line-height)' // 반응형 줄간격 명시적 적용
             }}
           >
             {safeText || '텍스트 로딩 중...'}
