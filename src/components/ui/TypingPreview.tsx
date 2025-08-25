@@ -72,11 +72,7 @@ export function TypingPreview({
 
       {/* 미리보기 텍스트 */}
       <div 
-        className="preview-content text-lg font-korean"
-        style={{
-          lineHeight: "1.8",
-          letterSpacing: "0.01em",
-        }}
+        className="preview-content text-lg font-korean typing-text-standardized"
       >
         {/* 현재 타이핑할 글자 (하이라이트) */}
         {currentChar && (

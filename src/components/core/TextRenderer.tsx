@@ -415,14 +415,7 @@ export const TextRenderer = memo(function TextRenderer({
             }}
           >
             <div 
-              className="flex flex-wrap justify-center items-baseline min-h-full"
-              style={{
-                // CSS 변수 기반 라인 높이 사용
-                lineHeight: "var(--typing-line-height-desktop, 1.5)",
-                letterSpacing: "0.02em", // 자간도 약간 추가
-                // 영화 크레딧 스타일을 위한 추가 스타일
-                textAlign: "center",
-              }}
+              className="typing-text-standardized flex flex-wrap justify-center items-baseline min-h-full"
             >
               {textContent}
             </div>
