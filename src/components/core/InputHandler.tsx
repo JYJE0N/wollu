@@ -29,7 +29,6 @@ export function InputHandler({
   className = ''
 }: InputHandlerProps) {
   const inputRef = useRef<HTMLInputElement>(null)
-  const hiddenInputRef = useRef<HTMLInputElement>(null)
   const imeHandler = useRef(new IMEHandler())
   const processedInputRef = useRef<Set<string>>(new Set())
   const browserType = useRef(getBrowserType())
@@ -120,16 +119,9 @@ export function InputHandler({
       onTestStart()
       setTestStarted(true)
       setShowStartHint(false)
-      
-      // iOS에서 테스트 시작 시 hiddenInput으로 포커스 이동
-      if (mobileInfo.isIOS && hiddenInputRef.current) {
-        setTimeout(() => {
-          hiddenInputRef.current?.focus()
-          console.log('📱 iOS: 숨겨진 input으로 포커스 이동')
-        }, 100)
-      }
+      console.log('🚀 테스트 시작 - 같은 input 계속 사용')
     }
-  }, [testStarted, isActive, onTestStart, mobileInfo.isIOS])
+  }, [testStarted, isActive, onTestStart])
 
   // Process character input (unified handler)
   const processCharacter = useCallback((char: string) => {
@@ -464,8 +456,9 @@ export function InputHandler({
         
         const input = inputRef.current
         
-        // iOS는 화면 하단의 별도 input을 사용하므로 단순 포커스만
+        // 가장 기본적인 포커스만
         input.focus()
+        console.log('📱 모바일 input에 포커스 적용')
       } else {
         maintainFocus()
       }
@@ -624,133 +617,94 @@ export function InputHandler({
     <div 
       className={`input-handler ${className} relative`} 
       style={{ pointerEvents: 'auto' }}
-      onClick={handleContainerClick}
     >
       {/* 모바일 키보드 활성화를 위한 실제 보이는 input (투명도 조정) */}
+      {/* 모든 플랫폼 통합: 가장 기본적인 방법 */}
       {mobileInfo.isMobile ? (
-        <>
-          {/* iOS는 텍스트와 완전히 분리된 고정 위치 input 필요 */}
-          {(mobileInfo.isIOS || mobileInfo.isIPad || mobileInfo.isIPhone) ? (
-            <>
-              {/* iOS 전용: 화면 하단 고정 input */}
-              <div 
-                className="fixed bottom-4 left-4 right-4 z-50 flex flex-col items-center gap-2"
-                style={{
-                  display: testStarted || isActive ? 'none' : 'flex'
-                }}
-              >
-                <div className="text-center text-sm px-4" style={{ color: 'var(--color-text-secondary)' }}>
-                  아래 입력창을 터치하여 타이핑을 시작하세요
-                </div>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="여기를 터치하세요"
-                  className="w-full max-w-sm h-14 px-4 text-center rounded-xl border-2 text-lg font-medium shadow-lg"
-                  style={{ 
-                    fontSize: '16px', // iOS 줌 방지
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderColor: 'rgba(59, 130, 246, 0.6)',
-                    color: 'var(--color-text-primary)',
-                    outline: 'none',
-                    backdropFilter: 'blur(10px)',
-                    // iOS 터치 최적화
-                    WebkitUserSelect: 'text',
-                    userSelect: 'text',
-                    WebkitAppearance: 'none',
-                    touchAction: 'manipulation'
-                  }}
-                  onClick={handleContainerClick}
-                  onFocus={() => {
-                    if (!testStarted && !isActive) {
-                      handleTestStart()
-                    }
-                  }}
-                  onInput={handleInput}
-                  onKeyDown={handleKeyDown}
-                  onCompositionStart={handleCompositionStart}
-                  onCompositionUpdate={handleCompositionUpdate}
-                  onCompositionEnd={handleCompositionEnd}
-                  disabled={disabled || isCompleted}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  inputMode="text"
-                  data-testid="ios-typing-input"
-                />
-              </div>
-              
-              {/* iOS 타이핑 중 숨겨진 input */}
-              {(testStarted || isActive) && (
-                <input
-                  ref={hiddenInputRef}
-                  type="text"
-                  className="fixed bottom-0 left-0 w-1 h-1 opacity-0"
-                  style={{ 
-                    fontSize: '16px',
-                    pointerEvents: 'auto',
-                    zIndex: 10
-                  }}
-                  onInput={handleInput}
-                  onKeyDown={handleKeyDown}
-                  onCompositionStart={handleCompositionStart}
-                  onCompositionUpdate={handleCompositionUpdate}
-                  onCompositionEnd={handleCompositionEnd}
-                  disabled={disabled || isCompleted}
-                  autoComplete="off"
-                  autoCorrect="off"
-                  autoCapitalize="off"
-                  spellCheck={false}
-                  inputMode="text"
-                  data-testid="ios-hidden-input"
-                />
-              )}
-            </>
-          ) : (
-            // 안드로이드용 기존 방식
-            <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-              <input
-                  ref={inputRef}
-                  type="text"
-                  placeholder="터치하여 타이핑을 시작하세요"
-                  className="w-full h-12 px-4 text-center rounded-lg border-2"
-                  style={{ 
-                    fontSize: '16px',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    borderColor: 'var(--color-interactive-primary)',
-                    color: 'var(--color-text-primary)',
-                    outline: 'none',
-                    zIndex: 60,
-                    // 타이핑 시작 후에는 거의 숨김
-                    opacity: testStarted || isActive ? 0.05 : 1,
-                    pointerEvents: 'auto',
-                    transition: 'opacity 0.3s ease',
-                    WebkitUserSelect: 'text',
-                    userSelect: 'text'
-                  }}
-            onClick={handleContainerClick}
+        <div style={{ padding: '20px', textAlign: 'center' }}>
+          <p style={{ marginBottom: '20px', color: 'var(--color-text-secondary)' }}>
+            입력창을 터치하여 타이핑을 시작하세요
+          </p>
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="여기를 터치하세요"
+            style={{
+              width: '100%',
+              height: '60px',
+              fontSize: '16px',
+              textAlign: 'center',
+              border: '2px solid var(--color-interactive-primary)',
+              borderRadius: '12px',
+              backgroundColor: 'var(--color-background-elevated)',
+              color: 'var(--color-text-primary)',
+              padding: '0 20px'
+            }}
             onFocus={() => {
               if (!testStarted && !isActive) {
                 handleTestStart()
               }
             }}
-            onInput={handleInput}
-            onKeyDown={handleKeyDown}
-            onCompositionStart={handleCompositionStart}
-            onCompositionUpdate={handleCompositionUpdate}
-            onCompositionEnd={handleCompositionEnd}
-            disabled={disabled || isCompleted}
+            onInput={(e) => {
+              const input = e.target as HTMLInputElement
+              const value = input.value
+              console.log('📱 모바일 input 이벤트:', { value, testStarted, isActive })
+              
+              if (value.length > 0) {
+                // 테스트가 아직 시작되지 않았다면 시작
+                if (!testStarted && !isActive) {
+                  console.log('🚀 모바일에서 테스트 시작 호출')
+                  handleTestStart()
+                  // 테스트 시작 후 약간 기다려서 상태가 업데이트되도록 함
+                  setTimeout(() => {
+                    const currentStore = useTypingStore.getState()
+                    console.log('📊 테스트 시작 후 상태:', {
+                      isActive: currentStore.isActive,
+                      isCountingDown: currentStore.isCountingDown
+                    })
+                    if (currentStore.isActive && !currentStore.isCountingDown) {
+                      // 마지막 입력 문자 처리
+                      const char = value.slice(-1)
+                      if (char) {
+                        console.log('🔤 모바일에서 문자 입력:', char)
+                        onKeyPress(char)
+                      }
+                    } else {
+                      console.log('❌ 테스트가 활성화되지 않음')
+                    }
+                    input.value = ''
+                  }, 50)
+                } else {
+                  // 테스트가 이미 시작된 경우 즉시 처리
+                  const currentStore = useTypingStore.getState()
+                  console.log('🔄 기존 테스트에서 입력:', {
+                    isActive: currentStore.isActive,
+                    isCountingDown: currentStore.isCountingDown
+                  })
+                  if (currentStore.isActive && !currentStore.isCountingDown) {
+                    const char = value.slice(-1)
+                    if (char) {
+                      console.log('🔤 모바일에서 문자 입력:', char)
+                      onKeyPress(char)
+                    }
+                  } else {
+                    console.log('❌ 테스트가 활성화되지 않음')
+                  }
+                  input.value = ''
+                }
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Backspace') {
+                onBackspace()
+              }
+            }}
             autoComplete="off"
             autoCorrect="off"
             autoCapitalize="off"
             spellCheck={false}
-            inputMode="text"
-            data-testid="android-typing-input"
-              />
-            </div>
-          )}
-        </>
+          />
+        </div>
       ) : (
         // 데스크톱용 숨김 input
         <input

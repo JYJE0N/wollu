@@ -304,8 +304,13 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
     const state = get()
     
     // Check test state
-    if (state.isCompleted || state.isPaused || state.isCountingDown) {
-      console.log('❌ Input blocked: test completed, paused, or counting down')
+    if (!state.isActive || state.isCompleted || state.isPaused || state.isCountingDown) {
+      console.log('❌ Input blocked: test not active, completed, paused, or counting down', {
+        isActive: state.isActive,
+        isCompleted: state.isCompleted,
+        isPaused: state.isPaused,
+        isCountingDown: state.isCountingDown
+      })
       return
     }
 
