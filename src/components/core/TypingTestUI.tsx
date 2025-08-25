@@ -330,7 +330,7 @@ export function TypingTestUI({
         </div>
 
         {/* 컨트롤 버튼들 - 반응형 통합 */}
-        <div className="typing-controls mb-2 md:mb-8 md:mt-8">
+        <div className="typing-controls mb-0 md:mb-8 md:mt-8">
           <div className="flex justify-center items-center gap-2 md:gap-4 w-full max-w-2xl mx-auto">
             {!isActive && !isCompleted && !isCountingDown && (
               <>
@@ -415,8 +415,8 @@ export function TypingTestUI({
         </div>
 
 
-        {/* 5. 숏컷 인포 */}
-        <div className="shortcuts-container">
+        {/* 5. 숏컷 인포 - 모바일에서 숨김 */}
+        <div className="shortcuts-container hidden md:block">
           <KeyboardShortcuts
             showStart={!isActive && !isCompleted && !isCountingDown}
             showPause={isActive && !isPaused}
