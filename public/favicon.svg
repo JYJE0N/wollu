@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- Background circle -->
+  <circle cx="16" cy="16" r="14" fill="#2563eb" stroke="#1d4ed8" stroke-width="1"/>
+  
+  <!-- 'ㅎ' character in clean, geometric style inspired by Hunminjeongeum -->
+  <g fill="white" stroke="none">
+    <!-- Left vertical line -->
+    <rect x="8" y="10" width="2" height="12" rx="1"/>
+    <!-- Right vertical line -->
+    <rect x="22" y="10" width="2" height="12" rx="1"/>
+    <!-- Top horizontal line -->
+    <rect x="8" y="12" width="16" height="2" rx="1"/>
+    <!-- Bottom horizontal line -->
+    <rect x="8" y="18" width="16" height="2" rx="1"/>
+    <!-- Center vertical line -->
+    <rect x="15" y="14" width="2" height="4" rx="1"/>
+  </g>
+</svg>

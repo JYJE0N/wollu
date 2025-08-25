@@ -1,0 +1,40 @@
+{
+  "name": "key-types",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "cross-env NODE_ENV=development next dev",
+    "build": "cross-env NODE_ENV=production next build",
+    "start": "cross-env NODE_ENV=production next start",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "./scripts/clean-mac-files.sh",
+    "clean:all": "./scripts/clean-mac-files.sh && rm -rf .next node_modules/.cache"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.11.0",
+    "lucide-react": "^0.539.0",
+    "mongoose": "^8.17.1",
+    "next": "^15.4.6",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1",
+    "react-icons": "^5.5.0",
+    "react-is": "^19.1.1",
+    "recharts": "^3.1.2",
+    "zustand": "^5.0.7"
+  },
+  "devDependencies": {
+    "@tailwindcss/typography": "^0.5.16",
+    "@types/node": "^24.3.0",
+    "@types/react": "^19.1.10",
+    "@types/react-dom": "^19.1.7",
+    "autoprefixer": "^10.4.21",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.33.0",
+    "eslint-config-next": "^15.4.6",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.0",
+    "typescript": "^5.9.2"
+  }
+}

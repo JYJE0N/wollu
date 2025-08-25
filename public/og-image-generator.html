@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 1200px;
+            height: 630px;
+            background: linear-gradient(135deg, #7c3aed 0%, #5b21b6 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* 배경 패턴 */
+        .bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.1) 0%, transparent 50%), 
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.05) 0%, transparent 50%);
+        }
+        
+        /* 메인 콘텐츠 */
+        .main-content {
+            display: flex;
+            align-items: center;
+            gap: 60px;
+            z-index: 10;
+            margin-bottom: 40px;
+        }
+        
+        /* 키보드 아이콘 컨테이너 */
+        .icon-container {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            padding: 40px;
+            backdrop-filter: blur(15px);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        /* 키보드 SVG */
+        .keyboard-icon {
+            filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.4));
+        }
+        
+        /* 텍스트 콘텐츠 */
+        .text-content {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .title {
+            font-size: 92px;
+            font-weight: 900;
+            margin: 0 0 24px 0;
+            text-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+            background: linear-gradient(45deg, #ffffff, #e0e7ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            letter-spacing: -2px;
+        }
+        
+        .subtitle {
+            font-size: 42px;
+            font-weight: 500;
+            margin: 0;
+            opacity: 0.9;
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.3);
+        }
+        
+        /* 기능 리스트 */
+        .features {
+            display: flex;
+            gap: 80px;
+            z-index: 10;
+            opacity: 0.9;
+        }
+        
+        .feature {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        
+        .feature-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #ec4899;
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5);
+        }
+        
+        /* 도메인 */
+        .domain {
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            font-size: 32px;
+            font-weight: 800;
+            opacity: 0.7;
+            text-shadow: 0 3px 12px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* 장식 요소 */
+        .decoration-1 {
+            position: absolute;
+            top: -120px;
+            left: -120px;
+            width: 240px;
+            height: 240px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+        }
+        
+        .decoration-2 {
+            position: absolute;
+            bottom: -180px;
+            right: -180px;
+            width: 360px;
+            height: 360px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.04);
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="main-content">
+        <div class="icon-container">
+            <!-- 키보드 SVG (원본 이미지 스타일과 유사하게) -->
+            <svg class="keyboard-icon" width="140" height="140" viewBox="0 0 120 80" fill="none">
+                <!-- 키보드 외곽 -->
+                <rect x="10" y="20" width="100" height="55" rx="6" ry="6" fill="#374151" stroke="#4b5563" stroke-width="1.5"/>
+                
+                <!-- 키보드 내부 배경 -->
+                <rect x="14" y="24" width="92" height="47" rx="3" ry="3" fill="#1f2937"/>
+                
+                <!-- 키보드 키들 (4행으로 정렬) -->
+                <!-- 1행 -->
+                <rect x="18" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="27" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="36" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="45" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="54" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="63" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="72" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="81" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="90" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="99" y="28" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                
+                <!-- 2행 -->
+                <rect x="18" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="27" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="36" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="45" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="54" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="63" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="72" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="81" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="90" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="99" y="38" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                
+                <!-- 3행 -->
+                <rect x="18" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="27" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="36" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="45" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="54" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="63" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="72" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="81" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="90" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                <rect x="99" y="48" width="7" height="7" rx="1.5" fill="#e5e7eb" stroke="#d1d5db" stroke-width="0.5"/>
+                
+                <!-- 스페이스바 -->
+                <rect x="35" y="58" width="50" height="8" rx="2" fill="#f9fafb" stroke="#e5e7eb" stroke-width="0.5"/>
+                
+                <!-- 키보드 외곽 강조 -->
+                <rect x="10" y="20" width="100" height="55" rx="6" ry="6" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+            </svg>
+        </div>
+        
+        <div class="text-content">
+            <h1 class="title">월루타자기</h1>
+            <p class="subtitle">나는 일을 하는 것입니다</p>
+        </div>
+    </div>
+    
+    <div class="features">
+        <div class="feature">
+            <div class="feature-dot"></div>
+            실시간 통계
+        </div>
+        <div class="feature">
+            <div class="feature-dot"></div>
+            승급 시스템
+        </div>
+        <div class="feature">
+            <div class="feature-dot"></div>
+            맞춤형 연습
+        </div>
+    </div>
+    
+    <div class="domain">wollu.life</div>
+    
+    <div class="decoration-1"></div>
+    <div class="decoration-2"></div>
+</body>
+</html>

@@ -1,0 +1,25 @@
+# 월루타자기 - 한글 타자 연습 사이트
+# https://wollu.life
+#DaumWebMasterTool:d5ca83cd0bb0664c0080673864cfd4b0e25a58b79b411d4887e842cd5ec563e0:K3+ujZin6cvemyrY776OoQ==
+
+User-agent: *
+Allow: /
+
+# 사이트맵 위치
+Sitemap: https://wollu.life/sitemap.xml
+
+# 크롤링 속도 조절 (1초 간격)
+Crawl-delay: 1
+
+# 특정 파일/디렉토리 제외
+Disallow: /api/
+Disallow: /_next/
+Disallow: /generate-og-image.js
+Disallow: /og-template.html
+
+# 주요 페이지 명시
+Allow: /
+Allow: /stats
+Allow: /sitemap.xml
+Allow: /favicon.ico
+Allow: /og-image.png
