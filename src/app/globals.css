@@ -1262,29 +1262,29 @@ div a.toolbar-icon:hover {
   /* 모바일 버튼 컨테이너 - 가로 배치로 변경 */
   .typing-controls .flex {
     flex-direction: row !important;
-    gap: var(--mobile-button-gap) !important;
+    gap: 0.5rem !important;
     width: 100% !important;
     max-width: 32rem !important; /* max-w-2xl */
     margin: 0 auto !important;
   }
   
-  /* 모바일 버튼 스타일 - 변수 사용 */
+  /* 모바일 버튼 스타일 - 직접 값 사용 */
   .typing-controls button {
     flex: 1 !important;
-    padding: calc(var(--mobile-button-height) / 5) var(--mobile-button-padding-x) !important; /* 더 넉넉한 상하 패딩 */
-    font-size: var(--mobile-button-font-size) !important;
+    padding: 0.6rem 1rem !important; /* 3rem/5 = 0.6rem */
+    font-size: 1rem !important;
     font-weight: 500 !important;
-    border-radius: var(--mobile-button-border-radius) !important;
-    min-height: var(--mobile-button-height) !important;
+    border-radius: 0.5rem !important;
+    min-height: 3rem !important;
     justify-content: center !important;
     display: flex !important;
     align-items: center !important;
-    gap: calc(var(--mobile-button-gap) / 2) !important;
+    gap: 0.25rem !important; /* 0.5rem/2 = 0.25rem */
   }
   
   .typing-controls button svg {
-    width: var(--mobile-button-icon-size) !important;
-    height: var(--mobile-button-icon-size) !important;
+    width: 1.25rem !important;
+    height: 1.25rem !important;
   }
 }
 

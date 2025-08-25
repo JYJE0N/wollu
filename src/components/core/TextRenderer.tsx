@@ -93,11 +93,11 @@ export const TextRenderer = memo(function TextRenderer({
   
   // 모바일 윈도우 스타일 (동적 높이 제어)
   const mobileWindowStyle = useMemo(() => {
-    // 텍스트 길이에 따른 예상 높이 계산
+    // 텍스트 길이에 따른 예상 높이 계산 - 더 유연하게
     const textLength = safeText.length;
     const estimatedLines = Math.ceil(textLength / 35); // 약 35자 단위로 줄 계산
     const lineHeight = 2.4; // rem 단위
-    const contentHeight = Math.max(12, Math.min(30, estimatedLines * lineHeight)); // 12rem~30rem 사이
+    const contentHeight = Math.max(8, Math.min(40, estimatedLines * lineHeight)); // 8rem~40rem 사이로 더 유연하게
     
     return {
       position: "relative" as const,
@@ -105,14 +105,14 @@ export const TextRenderer = memo(function TextRenderer({
       marginBottom: "1rem",
       marginLeft: "0.75rem",
       marginRight: "0.75rem",
-      minHeight: "12rem",
-      height: `${contentHeight}rem`,
-      maxHeight: "calc(70vh - var(--header-height, 4rem))",
+      minHeight: "8rem", // 최소 높이를 더 낮게
+      height: "auto", // 자동 높이로 변경
+      maxHeight: "calc(75vh - var(--header-height, 4rem))", // 더 높은 최대 높이
       overflow: "hidden" as const,
-      backgroundColor: "var(--color-surface, #ffffff)",
-      borderRadius: "1rem",
-      boxShadow: "0 4px 20px -4px rgba(0, 0, 0, 0.15), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
-      transition: "height 0.3s ease-in-out, max-height 0.3s ease-in-out", // 높이 전환
+      backgroundColor: "transparent", // 배경 제거
+      borderRadius: "0", // 모서리 둥글기 제거
+      boxShadow: "none", // 그림자 제거
+      transition: "max-height 0.3s ease-in-out", // 높이 전환
     };
   }, [safeText.length]); // 텍스트 길이 변경 시 재계산
   
