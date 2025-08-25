@@ -1,0 +1,20 @@
+export const longNumbers = [
+  'In the 21st century we live in a world where technology advances at incredible speed with over 7 billion people connected through the internet sharing information across 24 time zones every single day',
+  'A typical day has 1440 minutes and if you spend just 30 minutes practicing typing every day for 365 days you will have invested over 180 hours in developing this valuable skill',
+  'The distance from Earth to the Moon is approximately 238855 miles and it takes light only 1.3 seconds to travel there while it took humans 3 days during the Apollo 11 mission in 1969',
+  'World population reached 8 billion people in 2022 growing from just 2.5 billion in 1950 which represents more than a 300 percent increase in just 72 years of human history',
+  'The human brain contains approximately 86 billion neurons with each neuron connecting to about 7000 others creating over 600 trillion connections that process information at incredible speeds every second',
+  'Mount Everest stands 29032 feet tall and since 1953 when Edmund Hillary and Tenzing Norgay first reached the summit over 6000 climbers have successfully completed the challenging ascent',
+  'The Great Wall of China stretches over 13000 miles and was built over more than 2000 years by millions of workers making it one of the most impressive architectural achievements in human history',
+  'Reading 20 pages per day for 365 days means completing approximately 7300 pages annually which could represent 15 to 20 average length books depending on their size and content',
+  'The internet processes over 2.5 quintillion bytes of data daily which equals approximately 250000 DVDs worth of information created and shared by billions of users around the world',
+  'Learning 10 new vocabulary words each day for 1000 days would result in mastering 10000 words which represents advanced fluency in most languages according to linguistic experts worldwide',
+  'The average person takes approximately 7500 steps per day which equals about 4 miles of walking and burns roughly 300 calories contributing to overall health and fitness goals',
+  'During 8 hours of sleep our brains cycle through 4 to 6 complete sleep stages with each cycle lasting approximately 90 minutes allowing for proper rest and memory consolidation',
+  'The speed of light is 186282 miles per second which means sunlight takes about 8 minutes and 20 seconds to travel the 93 million miles from the Sun to Earth',
+  'Practicing a musical instrument for 30 minutes daily over 10 years equals approximately 1825 hours of practice which research shows can lead to expert level performance in most instruments',
+  'The Sahara Desert covers approximately 3.6 million square miles making it roughly the size of the entire United States and affecting weather patterns across multiple continents for thousands of years',
+  'Human DNA contains approximately 3 billion base pairs organized into 23 pairs of chromosomes with each cell containing the complete genetic blueprint for an entire human being',
+  'The Pacific Ocean covers about 63 million square miles and contains more than half of all free water on Earth reaching maximum depths of over 36000 feet in the Mariana Trench',
+  'Building the pyramids of Giza required moving approximately 2.3 million stone blocks each weighing between 2.5 and 15 tons using only human labor and simple tools over 4500 years ago'
+];

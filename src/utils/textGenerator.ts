@@ -1,5 +1,6 @@
 import { LanguagePack, TextType, TestMode, SentenceLength, SentenceStyle } from '@/types'
 import { stealthSentences, type StealthTextType } from '@/data/sentences/stealth'
+import { getSentencesByType, getRandomSentencesFromPool } from '@/data/sentences/utils'
 
 interface TextGenerationOptions {
   wordCount?: number
@@ -78,36 +79,38 @@ export class TextGenerator {
     style: SentenceStyle, 
     count: number = 1
   ): string {
-    const sentences = this.languagePack.sentences[length][style]
+    // 새로운 모듈화된 구조 사용
+    const language = this.languagePack.id === 'korean' ? 'korean' : 'english'
+    const sentences = getRandomSentencesFromPool(language, length, style, count)
     
     if (!sentences || sentences.length === 0) {
-      console.warn(`⚠️ 문장을 찾을 수 없음: ${length} ${style}`)
-      return this.generatePlainWords(10) // 대체 텍스트
-    }
-
-    const selectedSentences: string[] = []
-    
-    // 사용 가능한 문장 풀 복사 (중복 방지를 위해)
-    const availableSentences = [...sentences]
-    
-    for (let i = 0; i < count; i++) {
-      if (availableSentences.length === 0) {
-        // 모든 문장을 사용했으면 풀을 다시 채움
-        availableSentences.push(...sentences)
-        console.log(`📝 문장 풀 리셋 - ${i + 1}번째 문장부터 재사용`)
-      }
-
-      // 랜덤 인덱스 선택 후 해당 문장 제거
-      const randomIndex = Math.floor(Math.random() * availableSentences.length)
-      const selectedSentence = availableSentences[randomIndex]
-      selectedSentences.push(selectedSentence)
+      console.warn(`⚠️ 새 구조에서 문장을 찾을 수 없음: ${language} ${length} ${style}`)
       
-      // 사용된 문장을 풀에서 제거
-      availableSentences.splice(randomIndex, 1)
+      // 기존 구조 폴백 시도
+      const fallbackSentences = this.languagePack.sentences?.[length]?.[style]
+      if (fallbackSentences && fallbackSentences.length > 0) {
+        const selectedSentences: string[] = []
+        const availableSentences = [...fallbackSentences]
+        
+        for (let i = 0; i < count; i++) {
+          if (availableSentences.length === 0) {
+            availableSentences.push(...fallbackSentences)
+          }
+          const randomIndex = Math.floor(Math.random() * availableSentences.length)
+          selectedSentences.push(availableSentences[randomIndex])
+          availableSentences.splice(randomIndex, 1)
+        }
+        
+        const result = selectedSentences.join(' ')
+        console.log(`📝 기존 구조로 생성된 문장: ${result.substring(0, 100)}...`)
+        return result
+      }
+      
+      return this.generatePlainWords(10) // 최종 대체 텍스트
     }
 
-    const result = selectedSentences.join(' ')
-    console.log(`📝 생성된 문장 텍스트 (${length} ${style}): ${result.substring(0, 100)}...`)
+    const result = sentences.join(' ')
+    console.log(`📝 새 구조로 생성된 문장 (${language} ${length} ${style}): ${result.substring(0, 100)}...`)
     return result
   }
 

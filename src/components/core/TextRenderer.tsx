@@ -203,7 +203,7 @@ export const TextRenderer = memo(function TextRenderer({
       // 텍스트가 없으면 기본 메시지
       if (!safeText) {
         return (
-          <div className="text-gray-500 italic text-lg">
+          <div className="typing-text-standardized text-gray-500 italic">
             텍스트를 로드하는 중...
           </div>
         );
@@ -212,7 +212,7 @@ export const TextRenderer = memo(function TextRenderer({
       // 렌더링할 데이터가 없으면 원본 텍스트만 표시
       if (!wordGroups.length) {
         return (
-          <div className="font-korean text-xl">
+          <div className="font-korean typing-text-standardized">
             {safeText}
           </div>
         );
@@ -280,7 +280,7 @@ export const TextRenderer = memo(function TextRenderer({
     } catch (error) {
       // 전체 렌더링 실패 시 최종 fallback
       return (
-        <div className="font-korean text-xl text-gray-600">
+        <div className="font-korean typing-text-standardized text-gray-600">
           {safeText || '텍스트 렌더링 오류'}
         </div>
       );
@@ -296,7 +296,7 @@ export const TextRenderer = memo(function TextRenderer({
           style={{ padding: '1rem' }}
         >
           <div 
-            className="font-korean text-xl text-center"
+            className="font-korean typing-text-standardized text-center"
             style={{ 
               padding: '2rem 1rem',
               minHeight: '4rem',
@@ -338,7 +338,7 @@ export const TextRenderer = memo(function TextRenderer({
                 textContainerRef.current = el;
               }
             }}
-            className="typing-text-container font-korean text-xl text-center"
+            className="typing-text-container font-korean typing-text-standardized text-center"
             style={mobileTextContainerStyle}
           >
             {/* 실제 스크롤되는 텍스트 컨테이너 */}
@@ -401,17 +401,14 @@ export const TextRenderer = memo(function TextRenderer({
                 textContainerRef.current = el;
               }
             }}
-            className="typing-text-container font-korean text-2xl text-center"
+            className="typing-text-container font-korean typing-text-standardized text-center"
             style={{
               overflow: "auto",
               scrollbarWidth: "none",
               msOverflowStyle: "none",
               WebkitOverflowScrolling: "touch",
-              // 고정 패딩 설정
               padding: "4rem 2rem",
               height: "100%",
-              // 고정 폰트 크기
-              fontSize: "1.5rem",
             }}
           >
             <div 
@@ -435,7 +432,10 @@ export const TextRenderer = memo(function TextRenderer({
         border: '1px solid #e9ecef',
         borderRadius: '0.5rem'
       }}>
-        <div style={{ fontSize: '1.25rem', color: '#6c757d' }}>
+        <div 
+          className="typing-text-standardized"
+          style={{ color: 'var(--color-text-secondary)' }}
+        >
           {safeText || '텍스트를 표시할 수 없습니다'}
         </div>
       </div>

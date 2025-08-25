@@ -1,0 +1,20 @@
+export const longPunctuation = [
+  'Wow! Learning to type faster is such an amazing skill, isn\'t it? You can express your thoughts more quickly, communicate more effectively, and... well, just feel more confident when using a computer!',
+  '"Practice makes perfect," they say. But I believe it\'s more than that! It\'s about dedication, patience, and the willingness to keep going even when things get tough. Don\'t you agree?',
+  'Steve Jobs once said, "Stay hungry, stay foolish." What did he mean by this? I think he was encouraging us to never stop learning, never stop questioning, and never be afraid to take risks. Don\'t you find that inspiring?',
+  'Einstein wisely noted, "Life is like riding a bicycle. To keep your balance, you must keep moving." This metaphor is so powerful! It reminds us that growth requires motion, progress demands effort, and success comes to those who persevere.',
+  '"The only way to do great work is to love what you do," said Jobs again. But how do we find that passion? Sometimes it takes years of exploration, experimentation, and... yes, even failure to discover our true calling in life.',
+  'Gandhi taught us, "Be the change you wish to see in the world." What a profound statement! Instead of complaining about problems, why not become part of the solution? Every small action matters, doesn\'t it?',
+  'Churchill declared, "Never, never, never give up!" These words carried Britain through its darkest hour. When everything seems hopeless, when all doors appear closed... that\'s exactly when we need to find the strength to continue fighting.',
+  '"The journey of a thousand miles begins with a single step," Lao Tzu observed centuries ago. Isn\'t it amazing how relevant this wisdom remains? Every great achievement starts with one small, brave decision to begin.',
+  'Maya Angelou said, "If you don\'t like something, change it. If you can\'t change it, change your attitude." What powerful advice! We always have a choice in how we respond to life\'s challenges, don\'t we?',
+  '"Success is not final, failure is not fatal: it is the courage to continue that counts," Churchill reminded us. How often do we let temporary setbacks define us? True strength lies in resilience, in getting back up every time we fall.',
+  'Aristotle believed, "We are what we repeatedly do. Excellence, then, is not an act, but a habit." Think about it... our daily choices shape our character, our future, and ultimately our destiny. Isn\'t that both exciting and terrifying?',
+  '"The best time to plant a tree was twenty years ago. The second best time is now," goes an old Chinese proverb. Stop waiting for the perfect moment! Start today, start small, but start. What\'s holding you back?',
+  'Theodore Roosevelt proclaimed, "Believe you can and you\'re halfway there." What a simple yet powerful truth! Our mindset shapes our reality more than we often realize. Positive thinking isn\'t just feel-good philosophy; it\'s practical wisdom.',
+  '"In the middle of difficulty lies opportunity," Einstein observed. How often do we miss the hidden gifts within our struggles? Sometimes our greatest challenges become our most valuable teachers, don\'t you think?',
+  'Confucius taught, "It does not matter how slowly you go as long as you do not stop." Perfect advice for our impatient world! Progress isn\'t about speed; it\'s about persistence, consistency, and refusing to quit.',
+  '"The only impossible journey is the one you never begin," Tony Robbins reminds us. How many dreams die simply because we never take the first step? Fear of failure often prevents us from even trying, but isn\'t that the real failure?',
+  'Helen Keller said, "Life is either a daring adventure or nothing at all." What would happen if we embraced this mindset? Instead of playing it safe, what if we chose courage over comfort, growth over security?',
+  '"You miss one hundred percent of the shots you don\'t take," Wayne Gretzky noted about hockey, but it applies to life too! Opportunities require action, dreams demand effort, and success belongs to those who dare to try.'
+];

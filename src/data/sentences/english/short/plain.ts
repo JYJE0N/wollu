@@ -1,0 +1,22 @@
+export const shortPlain = [
+  'The cat is sleeping',
+  'Birds fly in the sky',
+  'Water flows down the river',
+  'Children play in the park',
+  'The sun rises every morning',
+  'Books help us learn',
+  'Friends make life better',
+  'Music brings joy',
+  'Trees grow tall and strong',
+  'Dreams can come true',
+  'Love conquers all obstacles',
+  'Time heals every wound',
+  'Knowledge is true power',
+  'Hope springs eternal always',
+  'Life is a beautiful journey',
+  'Smile and the world smiles',
+  'Today is a new beginning',
+  'Courage leads to success',
+  'Peace brings inner happiness',
+  'Stars shine in darkness'
+];

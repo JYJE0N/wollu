@@ -165,7 +165,8 @@
 
 /* 표준화된 타이핑 텍스트 스타일 */
 .typing-text-standardized {
-  line-height: var(--typing-line-height-desktop);
+  font-size: var(--typing-font-size);
+  line-height: var(--typing-line-height);
   letter-spacing: 0.02em;
   margin-bottom: 0;
   padding-bottom: 0;
@@ -592,7 +593,7 @@ html[data-theme="stealth-notion"] {
 :root {
   /* 기본 타이핑 텍스트 크기 및 줄간격 */
   --typing-font-size: 1.5rem; /* 24px */
-  --typing-line-height: 2.5;
+  --typing-line-height: 1.5;
   
   /* 계산된 한 줄 높이 */
   --single-line-height: calc(var(--typing-font-size) * var(--typing-line-height)); /* 60px */

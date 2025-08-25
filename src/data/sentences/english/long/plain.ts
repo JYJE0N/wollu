@@ -1,0 +1,20 @@
+export const longPlain = [
+  'Learning a new language is like opening a door to a completely different world where you can meet new people understand different cultures and expand your horizons in ways you never imagined possible',
+  'The art of reading allows us to travel through time and space without leaving our comfortable chair as we explore distant lands meet fascinating characters and learn valuable life lessons from the wisdom of others',
+  'Life is a journey filled with unexpected turns and beautiful moments that shape who we become as individuals and teach us the true meaning of resilience courage and compassion for ourselves and others around us',
+  'Friendship is one of the most precious gifts we can receive in life because true friends stand by us through both joyful celebrations and difficult challenges offering support understanding and unconditional love when we need it most',
+  'The beauty of nature reminds us to slow down and appreciate the simple pleasures in life from watching a sunset paint the sky in brilliant colors to listening to birds sing their morning songs in the quiet stillness of dawn',
+  'Education is not just about memorizing facts and figures but about developing critical thinking skills that enable us to question explore discover and create solutions to the complex problems facing our world today and tomorrow',
+  'Success is not measured solely by material possessions or social status but by the positive impact we have on others the relationships we build and the legacy of kindness and wisdom we leave behind for future generations to follow',
+  'Time is our most valuable resource because once it passes we can never get it back so we must learn to use each moment wisely by focusing on what truly matters and letting go of things that do not serve our highest purpose',
+  'Creativity flows from the depths of our imagination when we allow ourselves to think freely without judgment or fear of failure opening our minds to infinite possibilities and new ways of seeing and understanding the world around us',
+  'Love in all its forms is the foundation of human connection and the driving force behind our greatest achievements inspiring us to be better versions of ourselves and to care for others with genuine compassion and understanding',
+  'Change is an inevitable part of life that can be both challenging and exciting as it pushes us out of our comfort zones and encourages personal growth while opening doors to new opportunities and experiences we never expected',
+  'Dreams give our lives direction and purpose providing the motivation we need to overcome obstacles pursue our passions and work toward goals that align with our deepest values and desires for personal fulfillment and happiness',
+  'Wisdom comes not from age alone but from the willingness to learn from our mistakes reflect on our experiences and remain open to new perspectives that challenge our assumptions and help us grow as human beings',
+  'Gratitude transforms our perspective on life by helping us recognize and appreciate the countless blessings we often take for granted from the air we breathe to the love of family and friends who enrich our daily existence',
+  'Communication is the bridge that connects hearts and minds allowing us to share our thoughts feelings and experiences while building understanding trust and meaningful relationships that enrich our lives in countless ways',
+  'Perseverance is the quality that separates those who achieve their dreams from those who give up when faced with obstacles because it requires the courage to continue moving forward even when the path seems impossible',
+  'Nature teaches us valuable lessons about balance harmony and the interconnectedness of all living things reminding us that we are part of something much larger than ourselves and have a responsibility to protect our planet',
+  'Art in all its forms serves as a universal language that transcends cultural boundaries and speaks directly to the human soul expressing emotions and ideas that words alone cannot adequately capture or convey to others'
+];
