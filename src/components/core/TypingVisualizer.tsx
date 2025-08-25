@@ -188,62 +188,142 @@ export const TypingVisualizer = memo(function TypingVisualizer({
 
   return (
     <div className={`typing-visualizer ${className} relative`}>
-      <div className="relative flex items-center justify-center gap-4 py-8 px-6">
-        {displayChars.map(renderCharacter)}
+      {/* 모바일용 컴팩트 레이아웃 */}
+      <div className="md:hidden">
+        <div className="relative flex items-center justify-center gap-2 py-4 px-3">
+          {displayChars.map((char, index) => (
+            <div
+              key={`mobile-${index}-${char}-${currentIndex}-${isComposing}`}
+              className="relative flex items-center justify-center w-10 h-10 rounded-2xl text-sm font-korean font-medium backdrop-blur-xl border transition-all duration-500 ease-out"
+              style={{
+                backgroundColor: isComposing && index === currentPos
+                  ? 'var(--color-visualizer-composing-bg)'
+                  : index < currentPos && char
+                    ? 'var(--color-visualizer-completed-bg)'
+                    : index === currentPos && char
+                      ? 'var(--color-visualizer-current-bg)'
+                    : index > currentPos && char
+                      ? 'var(--color-visualizer-upcoming-bg)'
+                    : 'transparent',
+                color: isComposing && index === currentPos
+                  ? 'var(--color-visualizer-composing-text)'
+                  : index < currentPos && char
+                    ? 'var(--color-visualizer-completed-text)'
+                    : index === currentPos && char
+                      ? 'var(--color-visualizer-current-text)'
+                    : index > currentPos && char
+                      ? 'var(--color-visualizer-upcoming-text)'
+                    : 'transparent',
+                borderColor: isComposing && index === currentPos
+                  ? 'var(--color-visualizer-composing-bg)'
+                  : index < currentPos && char
+                    ? 'var(--color-visualizer-completed-bg)'
+                    : index === currentPos && char
+                      ? 'var(--color-visualizer-current-bg)'
+                    : 'var(--color-visualizer-upcoming-border)',
+                transform: `
+                  translateY(${isComposing && index === currentPos ? -4 : index === currentPos ? -2 : 0}px) 
+                  scale(${isComposing && index === currentPos ? 1.1 : index === currentPos ? 1.05 : index < currentPos ? 1.02 : 0.95})
+                `,
+                opacity: index > currentPos && char ? 0.5 : !char ? 0.1 : 1,
+              }}
+            >
+              <span className="relative z-10 select-none">
+                {char === ' ' ? (
+                  <span className="opacity-50 text-xs">␣</span>
+                ) : (
+                  char || ''
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+        
+        {/* 모바일용 상태 표시 - 간소화 */}
+        {isComposing && composingText && (
+          <div className="flex justify-center">
+            <div 
+              className="inline-flex items-center px-3 py-1 rounded-full backdrop-blur-xl border text-xs"
+              style={{
+                backgroundColor: 'var(--color-visualizer-status-bg)',
+                borderColor: 'var(--color-visualizer-status-border)',
+                color: 'var(--color-visualizer-status-text-active)'
+              }}
+            >
+              조합: 
+              <span 
+                className="font-mono px-2 py-0.5 rounded-full ml-1 font-medium"
+                style={{
+                  backgroundColor: 'var(--color-visualizer-composing-bg)',
+                  color: 'var(--color-visualizer-composing-text)'
+                }}
+              >
+                {composingText.slice(-1)}
+              </span>
+            </div>
+          </div>
+        )}
       </div>
-      
-      {/* 우아한 상태 표시 */}
-      <div className="flex justify-center mt-6">
-        <div 
-          className="inline-flex items-center px-6 py-3 rounded-full backdrop-blur-2xl border"
-          style={{
-            backgroundColor: 'var(--color-visualizer-status-bg)',
-            borderColor: 'var(--color-visualizer-status-border)'
-          }}
-        >
-          {/* 상태 텍스트 */}
-          <span 
-            className="text-sm font-light transition-all duration-500"
-            style={{ color: 'var(--color-visualizer-status-text)' }}
+
+      {/* 데스크톱용 기존 레이아웃 */}
+      <div className="hidden md:block">
+        <div className="relative flex items-center justify-center gap-4 py-8 px-6">
+          {displayChars.map(renderCharacter)}
+        </div>
+        
+        {/* 우아한 상태 표시 */}
+        <div className="flex justify-center mt-6">
+          <div 
+            className="inline-flex items-center px-6 py-3 rounded-full backdrop-blur-2xl border"
+            style={{
+              backgroundColor: 'var(--color-visualizer-status-bg)',
+              borderColor: 'var(--color-visualizer-status-border)'
+            }}
           >
-            {isComposing ? (
-              <span style={{ color: 'var(--color-visualizer-status-text-active)' }}>
-                중앙 조합 
-                <span 
-                  className="font-mono px-3 py-1 rounded-full ml-2 text-xs font-medium"
-                  style={{
-                    backgroundColor: 'var(--color-visualizer-composing-bg)',
-                    color: 'var(--color-visualizer-composing-text)'
-                  }}
-                >
-                  {composingText.slice(-1)}
-                </span>
-                {comboCount > 8 && (
+            {/* 상태 텍스트 */}
+            <span 
+              className="text-sm font-light transition-all duration-500"
+              style={{ color: 'var(--color-visualizer-status-text)' }}
+            >
+              {isComposing ? (
+                <span style={{ color: 'var(--color-visualizer-status-text-active)' }}>
+                  중앙 조합 
                   <span 
-                    className="ml-3 px-2 py-1 rounded-full text-xs"
+                    className="font-mono px-3 py-1 rounded-full ml-2 text-xs font-medium"
                     style={{
-                      backgroundColor: 'var(--color-visualizer-status-bg)',
-                      color: 'var(--color-visualizer-status-text)'
+                      backgroundColor: 'var(--color-visualizer-composing-bg)',
+                      color: 'var(--color-visualizer-composing-text)'
                     }}
                   >
-                    COMBO {comboCount}
+                    {composingText.slice(-1)}
                   </span>
-                )}
-              </span>
-            ) : (
-              <span style={{ color: 'var(--color-visualizer-status-text)' }}>
-                시그니처 한글 조합 모드
-                {comboCount > 0 && (
-                  <span 
-                    className="ml-3 text-xs"
-                    style={{ color: 'var(--color-visualizer-status-text)' }}
-                  >
-                    COMBO {comboCount}
-                  </span>
-                )}
-              </span>
-            )}
-          </span>
+                  {comboCount > 8 && (
+                    <span 
+                      className="ml-3 px-2 py-1 rounded-full text-xs"
+                      style={{
+                        backgroundColor: 'var(--color-visualizer-status-bg)',
+                        color: 'var(--color-visualizer-status-text)'
+                      }}
+                    >
+                      COMBO {comboCount}
+                    </span>
+                  )}
+                </span>
+              ) : (
+                <span style={{ color: 'var(--color-visualizer-status-text)' }}>
+                  시그니처 한글 조합 모드
+                  {comboCount > 0 && (
+                    <span 
+                      className="ml-3 text-xs"
+                      style={{ color: 'var(--color-visualizer-status-text)' }}
+                    >
+                      COMBO {comboCount}
+                    </span>
+                  )}
+                </span>
+              )}
+            </span>
+          </div>
         </div>
       </div>
     </div>

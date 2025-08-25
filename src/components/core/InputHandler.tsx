@@ -108,8 +108,8 @@ export function InputHandler({
       return
     }
 
-    // 데스크톱에서만 자동 시작 (모바일 감지 최적화)
-    if (!testStarted && !isCountingDown && !isActive && !mobileInfo.isMobile) {
+    // 모든 디바이스에서 자동 시작 - 버튼 제거로 인한 변경
+    if (!testStarted && !isCountingDown && !isActive) {
       handleTestStart()
     }
 
@@ -152,7 +152,7 @@ export function InputHandler({
         const prevValue = inputRef.current?.getAttribute('data-prev-value') || ''
         const newInput = value.slice(prevValue.length)
         
-        // 테스트 시작되지 않았으면 시작
+        // 모바일에서도 자동 시작 - 버튼 제거로 인한 변경
         if (!testStarted && !isCountingDown && !isActive) {
           handleTestStart()
         }
@@ -380,7 +380,7 @@ export function InputHandler({
       setCompositionState(false, '')
       onCompositionChange?.(false)
       
-      // 데스크톱에서만 자동 시작
+      // 모든 디바이스에서 자동 시작
       if (!testStarted && newChars.length > 0) {
         handleTestStart()
       }
@@ -419,9 +419,10 @@ export function InputHandler({
     const isMobile = mobileDetection?.isMobile ?? false
     
     if (isMobile && !testStarted && !isActive) {
-      // 모바일에서는 첫 클릭은 포커스만, 명시적 시작 대기
-      // console.log('📱 Mobile: Focus only, waiting for explicit start')
+      // 모바일에서도 클릭으로 시작 가능하도록 변경
+      // console.log('📱 Mobile: Starting test from click')
       maintainFocus()
+      handleTestStart() // 매바일에서도 클릭 시 시작
       if (showStartHint) {
         setShowStartHint(false)
       }
@@ -430,9 +431,9 @@ export function InputHandler({
     
     maintainFocus()
     
-    // 데스크톱에서는 클릭으로 시작 가능
-    if (!testStarted && !isActive && !isMobile) {
-      // console.log('🚀 Starting test from click (desktop)')
+    // 데스크톱에서도 클릭으로 시작 가능 (모바일 로직과 통합)
+    if (!testStarted && !isActive) {
+      // console.log('🚀 Starting test from click')
       handleTestStart()
     }
     
