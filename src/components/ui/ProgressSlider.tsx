@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useEffect, useState, useRef, memo, useCallback } from "react";
+import { useMemo, useEffect, useState, useRef, memo } from "react";
 
 interface ProgressSliderProps {
   value: number; // 0-100 사이의 값
@@ -123,7 +123,7 @@ export const ProgressSlider = memo(function ProgressSlider({
       ref={sliderRef}
       className={`progress-slider relative mx-auto ${className}`} 
       style={{ 
-        width: 'clamp(200px, 30vw, 280px)', // 태블릿에서 더 작게
+        width: 'clamp(200px, 30vw, 280px)',
         minWidth: '200px',
         maxWidth: '280px'
       }}
@@ -151,12 +151,12 @@ export const ProgressSlider = memo(function ProgressSlider({
         }}
       />
 
-      {/* 진행율 라벨 (썸과 중앙정렬) */}
+      {/* 진행율 라벨 (썸과 중앙정렬) - 컨테이너 안에 제한 */}
       {showLabel && (
         <div 
           className={`progress-label absolute ${sizeStyle.label} font-mono font-bold text-text-primary bg-surface px-3 py-2 rounded shadow-md border border-border transition-all ease-out z-30`}
           style={{ 
-            left: `${displayValue}%`,
+            left: `${Math.min(Math.max(displayValue, 15), 85)}%`, // 15%~85% 범위로 제한
             transform: 'translateX(-50%)',
             top: '-48px',
             transitionDuration: animated ? '1200ms' : '300ms'

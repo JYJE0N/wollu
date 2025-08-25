@@ -12,7 +12,7 @@ import { LanguageMismatchAlert } from "@/components/ui/LanguageMismatchAlert";
 import { useTypingStore } from "@/stores/typingStore";
 // import { useSettingsStore } from "@/stores/settingsStore"; // 현재 미사용
 import type { TierConfig } from "@/utils/tierSystem";
-import { useEffect, useState, lazy, Suspense } from "react";
+import { lazy, Suspense } from "react";
 
 // 동적 임포트: PromotionModal은 승급 시에만 필요하므로 지연 로딩
 const PromotionModal = lazy(() => 
@@ -97,9 +97,11 @@ export function TypingTestUI({
   // 설정 스토어에서 필요한 값들
   // const { testTarget } = useSettingsStore(); // 현재 미사용
 
-  // 가상 키보드 감지
-  const [keyboardVisible, setKeyboardVisible] = useState(false);
+  // 가상 키보드 감지 (현재 미사용)
+  // const [keyboardVisible, setKeyboardVisible] = useState(false);
 
+  // 가상 키보드 감지 로직 (현재 비활성화)
+  /* 
   useEffect(() => {
     const handleResize = () => {
       // 모바일에서만 감지
@@ -153,6 +155,7 @@ export function TypingTestUI({
       }
     };
   }, []);
+  */
 
   return (
     <div className={`typing-test-container mobile-content-container ${className}`}>
@@ -235,52 +238,23 @@ export function TypingTestUI({
       )}
 
       {/* 메인 컨텐츠 영역 - 새로운 레이아웃 구성 */}
-      <div className="main-content-area max-w-4xl mx-auto px-4">
+      <div className="main-content-area max-w-4xl mx-auto md:px-4">
         
-        {/* 1. 진행률 슬라이더 - 테스트 시작 시에만 표시 (배경만 제거) */}
-        {isActive && (
-          <div className="progress-slider-container mb-6">
-            <div className="w-full max-w-2xl mx-auto">
-              <CharacterProgressSlider
-                currentIndex={currentIndex}
-                totalLength={targetText.length}
-                elapsedTime={currentTime}
-                variant="success"
-                size="lg"
-                className=""
-                showCount={false}
-                animated={false}
-              />
-            </div>
+        {/* 상단 영역 - 진행률 슬라이더 (항상 표시) */}
+        <div className="mb-3 md:mb-6">
+          <div className="progress-slider-container w-full max-w-2xl mx-auto">
+            <CharacterProgressSlider
+              currentIndex={currentIndex}
+              totalLength={targetText.length}
+              elapsedTime={currentTime}
+              variant="primary"
+              size="lg"
+              className=""
+              showCount={true}
+              animated={isActive}
+            />
           </div>
-        )}
-
-        {/* 모든 기기 공용 시작 버튼 */}
-        {!isActive && !isCompleted && !isCountingDown && (
-          <div className="start-button-container mb-6 text-center">
-            <button
-              onClick={() => {
-                console.log('🚀 시작 버튼 클릭 - 사용자 의도적 시작');
-                onStart();
-              }}
-              className="inline-flex items-center gap-2 px-6 py-3 rounded-full font-medium transition-all duration-200 hover:scale-105 active:scale-95"
-              style={{
-                backgroundColor: 'var(--color-interactive-primary)',
-                color: 'var(--color-text-on-primary)',
-                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-              }}
-            >
-              <IoPlay className="w-5 h-5" />
-              타이핑 시작하기
-            </button>
-            <div 
-              className="text-xs mt-2 opacity-60"
-              style={{ color: 'var(--color-text-secondary)' }}
-            >
-              준비가 되면 버튼을 눌러주세요
-            </div>
-          </div>
-        )}
+        </div>
 
         {/* 2. 텍스트 필드 */}
         <div
@@ -290,6 +264,11 @@ export function TypingTestUI({
             // 일시정지 상태에서만 클릭으로 재개 허용
             if (isPaused && onResume) {
               onResume();
+            }
+            // 비활성 상태에서 클릭 시 테스트 시작
+            else if (!isActive && !isCompleted && !isCountingDown && onStart) {
+              console.log('🚀 텍스트 클릭으로 테스트 시작');
+              onStart();
             }
           }}
         >
@@ -337,78 +316,44 @@ export function TypingTestUI({
           )}
         </div>
 
-        {/* 모바일용 하단 UI 컨테이너 - 뷰포트 대응 */}
-        <div className="md:hidden fixed left-0 right-0 z-50" 
-             style={{ 
-               bottom: keyboardVisible 
-                 ? "calc(env(safe-area-inset-bottom, 0px) + 0.5rem)" // 가상키보드 활성 시: 바로 위에
-                 : "calc(var(--footer-height) + env(safe-area-inset-bottom, 0px) + 0.5rem)", // 일반 상태: 푸터 위에
-               maxHeight: keyboardVisible 
-                 ? "calc(var(--actual-viewport-height, 100vh) - var(--header-height) - 8rem)" // 가상키보드 시 실제 뷰포트 사용
-                 : "calc(50vh - 2rem)" // 일반 상태: 기존 높이 제한
-             }}>
-          
-          {/* 통합 정보 패널 - 조합패널 + 프로그레스바 */}
-          <div className="mx-3 mb-3">
-            <div
-              className="rounded-xl p-3"
-              style={{
-                backgroundColor: "var(--color-surface)",
-                border: "1px solid var(--color-border-primary)",
-                backdropFilter: "blur(16px)",
-                boxShadow: "0 8px 24px rgba(0,0,0,0.12)",
-              }}
-            >
-              {/* 조합 패널 (활성 상태일 때만) */}
-              {isActive && !isPaused && (
-                <div 
-                  className="mb-3"
-                  style={{ minHeight: "40px" }} // 높이 압축
-                >
-                  <TypingVisualizer
-                    text={targetText}
-                    currentIndex={currentIndex}
-                  />
-                </div>
-              )}
-              
-              {/* 프로그레스 바 */}
-              <div>
-                <CharacterProgressSlider
-                  currentIndex={currentIndex}
-                  totalLength={targetText.length}
-                  elapsedTime={currentTime}
-                  variant="success"
-                  size="sm"
-                  className="w-full"
-                  showCount={false}
-                  animated={false}
-                />
-              </div>
+        {/* 모바일용 조합 패널 - 일반 플로우 */}
+        <div className="md:hidden mt-2 mb-2">
+          {/* 조합 패널 (활성 상태일 때만) */}
+          {isActive && !isPaused && (
+            <div className="mb-2">
+              <TypingVisualizer
+                text={targetText}
+                currentIndex={currentIndex}
+              />
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* 컴팩트 컨트롤 버튼들 */}
-          <div className="flex justify-center items-center gap-2 px-3">
+        {/* 컨트롤 버튼들 - 반응형 통합 */}
+        <div className="typing-controls mb-2 md:mb-8 md:mt-8">
+          <div className="flex justify-center items-center gap-2 md:gap-4 w-full max-w-2xl mx-auto">
             {!isActive && !isCompleted && !isCountingDown && (
               <>
-                <button
-                  onClick={onStart}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-white hover:opacity-90 flex-1 max-w-[120px]"
-                  style={{ backgroundColor: "var(--color-interactive-primary)" }}
-                >
-                  <IoPlay className="w-3.5 h-3.5" />
-                  시작
-                </button>
 
                 <button
+                  onClick={onTestStart}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200 text-white hover:opacity-90 active:scale-95"
+                  style={{
+                    backgroundColor: "var(--color-interactive-primary)",
+                  }}
+                >
+                  <IoPlay className="w-4 h-4 md:w-5 md:h-5" />
+                  시작하기
+                </button>
+                
+                <button
                   onClick={onRestart}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-white hover:opacity-90 flex-1 max-w-[120px]"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200 text-white hover:opacity-90 active:scale-95"
                   style={{
                     backgroundColor: "var(--color-interactive-secondary)",
                   }}
                 >
-                  <IoReloadCircle className="w-3.5 h-3.5" />
+                  <IoReloadCircle className="w-4 h-4 md:w-5 md:h-5" />
                   새로고침
                 </button>
               </>
@@ -418,17 +363,24 @@ export function TypingTestUI({
               <>
                 <button
                   onClick={onPause}
-                  className="typing-button-secondary flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex-1 max-w-[100px]"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200 text-white hover:opacity-90 active:scale-95"
+                  style={{
+                    backgroundColor: "var(--color-interactive-secondary)",
+                  }}
                 >
-                  <IoPauseSharp className="w-3.5 h-3.5" />
+                  <IoPauseSharp className="w-4 h-4 md:w-5 md:h-5" />
                   정지
                 </button>
 
                 <button
                   onClick={onStop}
-                  className="typing-button-restart flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex-1 max-w-[100px]"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200"
+                  style={{
+                    backgroundColor: "var(--color-border)",
+                    color: "var(--color-text-primary)"
+                  }}
                 >
-                  <IoStop className="w-3.5 h-3.5" />
+                  <IoStop className="w-4 h-4 md:w-5 md:h-5" />
                   중단
                 </button>
               </>
@@ -438,20 +390,23 @@ export function TypingTestUI({
               <>
                 <button
                   onClick={onResume}
-                  className="typing-button-primary flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 flex-1 max-w-[100px]"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200 text-white hover:opacity-90 active:scale-95"
+                  style={{
+                    backgroundColor: "var(--color-interactive-primary)",
+                  }}
                 >
-                  <IoPlay className="w-3.5 h-3.5" />
+                  <IoPlay className="w-4 h-4 md:w-5 md:h-5" />
                   재개
                 </button>
 
                 <button
                   onClick={onRestart}
-                  className="flex items-center gap-1.5 px-3 py-2 rounded-lg font-medium text-sm transition-all duration-200 text-white hover:opacity-90 flex-1 max-w-[100px]"
+                  className="flex-1 flex items-center justify-center gap-2 px-4 md:px-6 py-2.5 md:py-3 rounded-lg font-medium md:font-semibold text-sm md:text-base transition-all duration-200 text-white hover:opacity-90 active:scale-95"
                   style={{
                     backgroundColor: "var(--color-interactive-secondary)",
                   }}
                 >
-                  <IoReloadCircle className="w-3.5 h-3.5" />
+                  <IoReloadCircle className="w-4 h-4 md:w-5 md:h-5" />
                   새로고침
                 </button>
               </>
@@ -459,75 +414,6 @@ export function TypingTestUI({
           </div>
         </div>
 
-        {/* 4. 컨트롤 버튼 - PC 버전 */}
-        <div className="hidden md:flex justify-center items-center gap-4 mb-8 mt-8">
-          {!isActive && !isCompleted && !isCountingDown && (
-            <>
-              <button
-                onClick={onStart}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 text-white hover:opacity-90 hover:scale-102 active:scale-95"
-                style={{ backgroundColor: "var(--color-interactive-primary)" }}
-              >
-                <IoPlay className="w-5 h-5" />
-                시작하기
-              </button>
-
-              <button
-                onClick={onRestart}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 text-white hover:opacity-90 hover:scale-102 active:scale-95"
-                style={{
-                  backgroundColor: "var(--color-interactive-secondary)",
-                }}
-              >
-                <IoReloadCircle className="w-5 h-5" />
-                새로고침
-              </button>
-            </>
-          )}
-
-          {isActive && !isPaused && (
-            <>
-              <button
-                onClick={onPause}
-                className="typing-button-secondary flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-opacity-10 hover:scale-102 active:scale-95"
-              >
-                <IoPauseSharp className="w-5 h-5" />
-                일시정지
-              </button>
-
-              <button
-                onClick={onStop}
-                className="typing-button-restart flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:bg-opacity-10 hover:scale-102 active:scale-95"
-              >
-                <IoStop className="w-5 h-5" />
-                중단
-              </button>
-            </>
-          )}
-
-          {isPaused && (
-            <>
-              <button
-                onClick={onResume}
-                className="typing-button-primary flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 hover:opacity-90 hover:scale-102 active:scale-95"
-              >
-                <IoPlay className="w-5 h-5" />
-                재개하기
-              </button>
-
-              <button
-                onClick={onRestart}
-                className="flex items-center gap-2 px-6 py-3 rounded-lg font-semibold transition-all duration-200 text-white hover:opacity-90 hover:scale-102 active:scale-95"
-                style={{
-                  backgroundColor: "var(--color-interactive-secondary)",
-                }}
-              >
-                <IoReloadCircle className="w-5 h-5" />
-                새로고침
-              </button>
-            </>
-          )}
-        </div>
 
         {/* 5. 숏컷 인포 */}
         <div className="shortcuts-container">

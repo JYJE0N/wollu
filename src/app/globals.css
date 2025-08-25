@@ -71,32 +71,40 @@
 
 /* 모바일 컨테이너 및 iPad Mini 최적화 */
 @media (max-width: 768px) {
-  /* 타이핑 페이지에서만 스크롤 차단 - 모바일만 */
+  /* 타이핑 페이지에서 부드러운 스크롤 허용 - 모바일만 */
   body.typing-page {
-    height: 100vh !important;
-    overflow: hidden !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
   }
   
   .mobile-content-container {
-    height: 100vh;
+    min-height: 100vh;
     width: 100vw;
-    position: fixed;
-    top: 0;
-    left: 0;
-    overflow: hidden; /* 내부 스크롤 차단 */
+    position: relative;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+  
+  /* 모바일 상단 고정 영역 */
+  .top-status-area {
+    min-height: 80px !important; /* 고정 높이로 일관성 확보 */
+    transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  }
+  
+  /* 모바일 텍스트 렌더러 - 일반 플로우 */
+  .fixed-text-window {
+    position: relative !important;
+    transform: translateZ(0); /* GPU 가속 */
+    will-change: height;
+    transition: height 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) !important;
   }
 
-  /* 모바일 언어 토글 고정 */
+  /* 모바일 언어 토글 - 일반 배치 */
   .mobile-language-toggle {
-    position: fixed !important;
-    top: calc(var(--header-height) + 1rem);
-    left: 0;
-    right: 0;
-    z-index: 50;
-    margin-bottom: 0 !important;
-    background-color: var(--color-background);
-    padding: 0.5rem 0;
-    border-bottom: 1px solid var(--color-border-primary);
+    position: relative;
+    margin-bottom: 1rem;
+    padding: 0;
   }
   
   /* 카운트다운 중에는 언어 토글 숨김 */
@@ -138,16 +146,18 @@
     }
   }
 
-/* 글자 조합 패널 - 가상 키보드 고려 */
+/* 글자 조합 패널 및 하단 UI - 가상 키보드 고려 */
 @media (max-width: 768px) {
   .composition-panel {
     position: fixed !important;
     bottom: calc(var(--keyboard-height) + 3.5rem);
     left: 0;
     right: 0;
-    z-index: 25;
+    z-index: 60; /* 모든 요소보다 높게 */
     margin-bottom: 0 !important;
   }
+  
+  /* mobile-bottom-ui 제거 - 더 이상 고정 위치 사용하지 않음 */
 }
 
 /* 📱 모바일 고정 윈도우 스크롤바 숨기기 */
@@ -163,18 +173,21 @@
   transition: scroll-behavior 0.2s ease-in-out;
 }
 
-/* 표준화된 타이핑 텍스트 스타일 */
+/* 표준화된 타이핑 텍스트 스타일 - 통합 줄간격 */
 .typing-text-standardized {
   font-size: var(--typing-font-size);
-  line-height: var(--typing-line-height);
+  line-height: var(--typing-line-height-unified);
   letter-spacing: 0.02em;
   margin-bottom: 0;
   padding-bottom: 0;
+  /* 폰트 높이 정규화 */
+  font-family: 'Pretendard', 'JetBrains Mono', monospace;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+  text-rendering: optimizeLegibility;
 }
 
-/* 디바이스별 타이핑 텍스트 최적화 */
+/* 통합된 타이핑 텍스트 최적화 (디바이스 독립적) */
 .mobile-device .typing-text-standardized {
-  line-height: var(--typing-line-height-mobile);
   letter-spacing: 0.01em;
   padding-top: var(--spacing-4);
   padding-bottom: var(--spacing-4);
@@ -182,22 +195,19 @@
 
 /* 모바일 타이핑 컨테이너 레이아웃 */
 .mobile-typing-container {
-  /* min-height: 300vh; */
   display: block; /* flex 대신 block으로 줄간격 정상 적용 */
   text-align: center;
-  line-height: var(--typing-line-height-mobile);
+  line-height: var(--typing-line-height-unified);
   word-wrap: break-word;
   white-space: pre-wrap; /* 공백과 줄바꿈 유지 */
   padding: var(--spacing-4) 0;
 }
 
 .tablet-device .typing-text-standardized {
-  line-height: var(--typing-line-height-tablet);
   letter-spacing: 0.015em;
 }
 
 .desktop-device .typing-text-standardized {
-  line-height: var(--typing-line-height-desktop);
   letter-spacing: 0.02em;
 }
 
@@ -587,21 +597,28 @@ html[data-theme="stealth-notion"] {
 @import url("https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap");
 
 /* ===============================
-   🎯 적응형 텍스트 윈도우 계산 변수
+   🎯 적응형 텍스트 윈도우 계산 변수 (모니터 비율 최적화)
    =============================== */
 
 :root {
-  /* 기본 타이핑 텍스트 크기 및 줄간격 */
+  /* 통합 타이핑 텍스트 크기 및 줄간격 */
   --typing-font-size: 1.5rem; /* 24px */
-  --typing-line-height: 1.5;
+  --typing-line-height-unified: 1.6; /* 한글/영문 혼재 최적화 */
+  --typing-line-height: var(--typing-line-height-unified); /* 호환성 유지 */
   
   /* 계산된 한 줄 높이 */
-  --single-line-height: calc(var(--typing-font-size) * var(--typing-line-height)); /* 60px */
+  --single-line-height: calc(var(--typing-font-size) * var(--typing-line-height-unified)); /* 38.4px */
   
-  /* 구멍뚫린 창 설정 */
+  /* 구멍뚫린 창 설정 - 동적 높이 계산 */
   --visible-lines: 3; /* 보여질 줄 수 */
-  --window-padding: 80px; /* 상하 여백 더 증가 */
-  --window-height: calc(var(--single-line-height) * var(--visible-lines) + var(--window-padding) * 2); /* 340px */
+  --window-padding: 4rem; /* 상하 여백 (rem 단위 사용) */
+  --window-height: calc(var(--single-line-height) * var(--visible-lines) + var(--window-padding) * 2);
+  
+  /* 반응형 문단 너비 최적화 */
+  --optimal-reading-width-min: 45ch; /* 최소 읽기 너비 (45자) */
+  --optimal-reading-width-max: 85ch; /* 최대 읽기 너비 (85자) */
+  --viewport-ratio-narrow: 65vw; /* 일반 모니터 (16:9) */
+  --viewport-ratio-wide: 55vw; /* 와이드 모니터 (21:9+) */
   
   /* 블러 마스크 설정 - 자연스러운 전환을 위해 좀 더 크게 */
   --blur-lines: 0.75; /* 블러 적용 줄 수 약간 증가 */
@@ -610,6 +627,31 @@ html[data-theme="stealth-notion"] {
   
   /* 텍스트 컨테이너 패딩 (블러 높이와 동일) */
   --text-container-padding-vertical: var(--blur-height); /* 65px */
+}
+
+/* ===============================
+   🎯 반응형 모니터 비율 최적화
+   =============================== */
+
+/* 와이드 모니터 (21:9 이상) 최적화 */
+@media (min-aspect-ratio: 21/9) {
+  :root {
+    --typing-container-width: clamp(var(--optimal-reading-width-min), var(--viewport-ratio-wide), var(--optimal-reading-width-max));
+  }
+}
+
+/* 일반 모니터 (16:10, 16:9) 최적화 */
+@media (max-aspect-ratio: 21/9) {
+  :root {
+    --typing-container-width: clamp(var(--optimal-reading-width-min), var(--viewport-ratio-narrow), var(--optimal-reading-width-max));
+  }
+}
+
+/* 세로형 화면 (태블릿, 모바일) 최적화 */
+@media (max-aspect-ratio: 4/3) {
+  :root {
+    --typing-container-width: 85vw; /* 세로형에서는 더 넓게 */
+  }
 }
 
 /* ===============================
@@ -670,6 +712,9 @@ a:hover {
   html, body {
     height: 100%;
     overflow-x: hidden;
+    margin: 0;
+    padding: 0;
+    width: 100%;
   }
   
   body {
@@ -1114,8 +1159,133 @@ div a.toolbar-icon:hover {
 
 /* 텍스트 렌더러 스타일 */
 .typing-text-container {
-  font-size: var(--font-size, 26px);
+  font-size: var(--typing-font-size, 1.5rem);
   font-weight: 500;
+  /* 문단 너비 최적화 적용 */
+  max-width: var(--typing-container-width, clamp(45ch, 65vw, 85ch));
+  margin: 0 auto;
+}
+
+/* ===============================
+   📱 모바일 레이아웃 리팩터링
+   =============================== */
+
+@media (max-width: 768px) {
+  /* 모바일 CSS 변수 오버라이드 */
+  :root {
+    --mobile-content-padding: 1rem;
+    --mobile-spacing-sm: 0.75rem;
+    --mobile-spacing-md: 1rem;
+    --mobile-spacing-lg: 1.5rem;
+    
+    /* 모바일 버튼 시스템 */
+    --mobile-button-height: 3rem; /* py-3 상당 - 더 높게 */
+    --mobile-button-padding-x: 1rem; /* px-4 */
+    --mobile-button-gap: 0.5rem; /* gap-2 */
+    --mobile-button-font-size: 1rem; /* text-base - 한단계 키움 */
+    --mobile-button-icon-size: 1.25rem; /* w-5 h-5 - 한단계 키움 */
+    --mobile-button-border-radius: 0.5rem; /* rounded-lg */
+  }
+  
+  /* 기본 컨테이너 리셋 */
+  .app-layout,
+  .app-main {
+    width: 100vw;
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+  }
+  
+  /* 메인 컨텐츠 컨테이너 */
+  .main-content-area {
+    max-width: none !important;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: var(--mobile-content-padding) !important;
+    box-sizing: border-box !important;
+  }
+  
+  /* 타이핑 관련 컨테이너들 */
+  .typing-text-container {
+    max-width: none !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  
+  /* 프로그레스 슬라이더 */
+  .progress-slider {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+  }
+  
+  .progress-slider-container {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+  }
+  
+  /* 모바일 타이핑 영역 간격 최적화 */
+  .mb-3 {
+    margin-bottom: var(--mobile-spacing-sm) !important;
+  }
+  
+  .mb-6 {
+    margin-bottom: var(--mobile-spacing-lg) !important;
+  }
+  
+  /* 모바일 버튼 1.8배 확대 */
+  .typing-button-primary,
+  .typing-button-secondary,
+  .typing-button-restart {
+    padding: 1.8rem 2.7rem !important; /* 기본 1rem 1.5rem의 1.8배 */
+    font-size: 1.62rem !important; /* 기본 0.9rem의 1.8배 */
+    min-height: 79.2px !important; /* 기본 44px의 1.8배 */
+  }
+  
+  /* 모바일 버튼 아이콘 1.8배 확대 */
+  .typing-button-primary svg,
+  .typing-button-secondary svg,
+  .typing-button-restart svg,
+  button svg {
+    width: 1.44rem !important; /* 기본 0.8rem(h-4)의 1.8배 */
+    height: 1.44rem !important;
+  }
+  
+  /* 타이핑 버튼 컨테이너 - 텍스트 렌더러와 동일한 너비 */
+  .typing-controls {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+  
+  /* 모바일 버튼 컨테이너 - 가로 배치로 변경 */
+  .typing-controls .flex {
+    flex-direction: row !important;
+    gap: var(--mobile-button-gap) !important;
+    width: 100% !important;
+    max-width: 32rem !important; /* max-w-2xl */
+    margin: 0 auto !important;
+  }
+  
+  /* 모바일 버튼 스타일 - 변수 사용 */
+  .typing-controls button {
+    flex: 1 !important;
+    padding: calc(var(--mobile-button-height) / 5) var(--mobile-button-padding-x) !important; /* 더 넉넉한 상하 패딩 */
+    font-size: var(--mobile-button-font-size) !important;
+    font-weight: 500 !important;
+    border-radius: var(--mobile-button-border-radius) !important;
+    min-height: var(--mobile-button-height) !important;
+    justify-content: center !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: calc(var(--mobile-button-gap) / 2) !important;
+  }
+  
+  .typing-controls button svg {
+    width: var(--mobile-button-icon-size) !important;
+    height: var(--mobile-button-icon-size) !important;
+  }
 }
 
 .end-cursor {
@@ -1422,6 +1592,13 @@ div a.toolbar-icon:hover {
     font-size: 14px;
   }
 
+  /* 모바일 타이핑 컨테이너 가독성 최적화 */
+  .typing-text-container {
+    font-size: clamp(1.25rem, 4vw, 1.5rem) !important; /* 화면 크기에 따른 반응형 */
+    line-height: var(--typing-line-height-unified) !important;
+    padding: 1rem 0.5rem !important; /* 좌우 여백 최소화 */
+  }
+
   /* 모바일 툴바 최적화 */
   .toolbar-icon {
     padding: 0.75rem !important; /* 더 큰 터치 영역 */
@@ -1464,6 +1641,13 @@ div a.toolbar-icon:hover {
 @media (max-width: 480px) {
   body {
     font-size: 13px;
+  }
+
+  /* 소형 모바일 타이핑 컨테이너 최적화 */
+  .typing-text-container {
+    font-size: clamp(1.125rem, 5vw, 1.375rem) !important;
+    padding: 0.75rem 0.25rem !important; /* 더 좁은 여백 */
+    line-height: 1.5 !important; /* 소형 화면에서 줄간격 조정 */
   }
 
   /* 작은 화면에서 더 촘촘한 레이아웃 */

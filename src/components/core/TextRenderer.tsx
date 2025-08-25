@@ -91,30 +91,49 @@ export const TextRenderer = memo(function TextRenderer({
     return `${getTypingTextClassName(deviceContext)} mobile-typing-container`;
   }, [deviceContext, isClient]);
   
-  // 스타일 객체 메모이제이션 (참조 안정성 확보)
-  const mobileWindowStyle = useMemo(() => ({
-    position: "fixed" as const,
-    top: "6rem",
-    left: "1rem",
-    right: "1rem",
-    minHeight: "10rem",
-    maxHeight: "40vh", // 가상 키보드를 고려한 높이 (화면의 40%)
-    overflow: "hidden" as const,
-    zIndex: 40,
-    backgroundColor: "var(--color-surface, #ffffff)",
-    borderRadius: "0.75rem",
-    border: "2px solid var(--color-border-primary, #e5e7eb)",
-    boxShadow: "0 10px 25px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
-  }), []);
+  // 모바일 윈도우 스타일 (동적 높이 제어)
+  const mobileWindowStyle = useMemo(() => {
+    // 텍스트 길이에 따른 예상 높이 계산
+    const textLength = safeText.length;
+    const estimatedLines = Math.ceil(textLength / 35); // 약 35자 단위로 줄 계산
+    const lineHeight = 2.4; // rem 단위
+    const contentHeight = Math.max(12, Math.min(30, estimatedLines * lineHeight)); // 12rem~30rem 사이
+    
+    return {
+      position: "relative" as const,
+      marginTop: "1rem",
+      marginBottom: "1rem",
+      marginLeft: "0.75rem",
+      marginRight: "0.75rem",
+      minHeight: "12rem",
+      height: `${contentHeight}rem`,
+      maxHeight: "calc(70vh - var(--header-height, 4rem))",
+      overflow: "hidden" as const,
+      backgroundColor: "var(--color-surface, #ffffff)",
+      borderRadius: "1rem",
+      boxShadow: "0 4px 20px -4px rgba(0, 0, 0, 0.15), 0 2px 8px -2px rgba(0, 0, 0, 0.08)",
+      transition: "height 0.3s ease-in-out, max-height 0.3s ease-in-out", // 높이 전환
+    };
+  }, [safeText.length]); // 텍스트 길이 변경 시 재계산
   
-  const mobileTextContainerStyle = useMemo(() => ({
-    overflow: "auto" as const,
-    scrollbarWidth: "none" as const,
-    msOverflowStyle: "none" as const,
-    WebkitOverflowScrolling: "touch" as const,
-    padding: "1rem",
-    minHeight: "6rem",
-  }), []);
+  // 모바일 텍스트 컨테이너 스타일 (콘텐츠 적응형)
+  const mobileTextContainerStyle = useMemo(() => {
+    const textLength = safeText.length;
+    const isShortText = textLength < 100; // 짧은 텍스트 기준
+    
+    return {
+      overflow: "auto" as const,
+      scrollbarWidth: "none" as const,
+      msOverflowStyle: "none" as const,
+      WebkitOverflowScrolling: "touch" as const,
+      padding: isShortText ? "2rem 1rem" : "1.5rem 1rem", // 짧은 텍스트는 패딩 증가
+      minHeight: "6rem",
+      height: "100%", // 부모 요소의 높이 최대 활용
+      display: "flex",
+      flexDirection: "column" as const,
+      justifyContent: isShortText ? "center" : "flex-start", // 짧은 텍스트는 중앙, 긴 텍스트는 상단
+    };
+  }, [safeText.length]);
 
   // 문자별 상태 계산 (안전한 정규화된 값 사용)
   const characterStates = useMemo(() => {
@@ -350,13 +369,13 @@ export const TextRenderer = memo(function TextRenderer({
           </div>
         </div>
       ) : (
-        // PC/태블릿: 적응형 구멍뚫린 창
+        // PC/태블릿: 비율 기반 최적화 창
         <div
           className="desktop-text-window"
           style={{
             position: "relative",
-            width: "70%", // 뷰포트의 70%만 사용
-            maxWidth: "800px", // 최대 너비 제한
+            width: "clamp(45ch, 65vw, 85ch)", // 문자 기반 비율 (이상적: 45-85자)
+            maxWidth: "none", // clamp가 제어하므로 제거
             margin: "0 auto", // 중앙 정렬
             // 고정 높이 설정 (CSS 변수 대신)
             height: renderDimensions.containerHeight + 'px',
