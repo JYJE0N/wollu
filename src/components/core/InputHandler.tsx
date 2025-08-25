@@ -52,38 +52,51 @@ export function InputHandler({
   // Focus management with iOS/iPad specific handling
   const maintainFocus = useCallback(() => {
     if (inputRef.current && !disabled && !isCompleted) {
-      const { isMobile, isIOS, isAndroid } = mobileInfo
+      const { isMobile, isIOS } = mobileInfo
       
       if (isMobile) {
         const input = inputRef.current
         
-        // 모바일 키보드 활성화 최적화 (단순화)
+        // 모바일 키보드 활성화 최적화
         input.removeAttribute('readonly')
         input.setAttribute('inputmode', 'text')
         input.setAttribute('autocomplete', 'off')
         input.setAttribute('autocorrect', 'off')
         input.setAttribute('spellcheck', 'false')
         
-        if (isAndroid) {
-          input.setAttribute('type', 'text')
+        // iOS와 Android 모두 type="text" 설정 (iOS 키보드 활성화 필수)
+        input.setAttribute('type', 'text')
+        
+        // iOS 전용 추가 설정
+        if (isIOS) {
+          // iOS는 contenteditable 속성이 키보드 활성화에 도움
+          input.setAttribute('contenteditable', 'true')
+          // iOS 자동완성 관련 추가 속성
+          input.setAttribute('autocapitalize', 'off')
         }
         
-        // 단일 포커스 시도
-        input.focus()
+        // 포커스 시도 (재시도 횟수 제한으로 무한루프 방지)
+        let attempts = 0
+        const maxAttempts = 2
         
-        // 필요시 한 번만 재시도 (성능 최적화)
-        if (document.activeElement !== input) {
-          setTimeout(() => {
-            if (input && document.activeElement !== input) {
-              input.focus()
-            }
-          }, 50)
+        const tryFocus = () => {
+          if (attempts >= maxAttempts || !input) return
+          
+          input.focus()
+          attempts++
+          
+          // 포커스 실패 시 재시도 (최대 2회)
+          if (document.activeElement !== input && attempts < maxAttempts) {
+            setTimeout(tryFocus, 100)
+          }
         }
+        
+        tryFocus()
       } else {
         inputRef.current.focus()
       }
     }
-  }, [disabled, isCompleted])
+  }, [disabled, isCompleted, mobileInfo])
 
   // Auto-start test on first valid input
   const handleTestStart = useCallback(() => {
@@ -130,7 +143,7 @@ export function InputHandler({
     setTimeout(() => {
       processedInputRef.current.delete(charId)
     }, 200)
-  }, [testStarted, onKeyPress, isActive, isCountingDown, handleTestStart])
+  }, [testStarted, onKeyPress, handleTestStart])
 
   // Handle direct input (모바일 최적화 포함)
   const handleInput = useCallback((event: React.FormEvent<HTMLInputElement>) => {
@@ -199,7 +212,7 @@ export function InputHandler({
       // Clear input to prevent accumulation
       target.value = ''
     }
-  }, [disabled, isCompleted, processCharacter, mobileInfo.isMobile, testStarted, onTestStart, onKeyPress])
+  }, [disabled, isCompleted, processCharacter, mobileInfo.isMobile, testStarted, onTestStart, onKeyPress, handleTestStart])
 
   // Handle keyboard events (전역 이벤트 처리 제외 문자만)
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -309,7 +322,7 @@ export function InputHandler({
         }
       }
     }
-  }, [disabled, isCompleted, testStarted, isCountingDown, isActive, isPaused, onBackspace, onResume, onPause, onRestart, handleTestStart, processCharacter])
+  }, [disabled, isCompleted, isPaused, onBackspace, onResume, onPause, onRestart, processCharacter])
 
   // Composition event handlers (for IME)
   const handleCompositionStart = useCallback((event: React.CompositionEvent) => {
@@ -400,7 +413,7 @@ export function InputHandler({
   }, [testStarted, onCompositionChange, mobileInfo.isMobile, handleTestStart, onKeyPress, processCharacter, setCompositionState])
 
   // Handle click to focus and start test (모바일 최적화)
-  const handleContainerClick = useCallback(() => {
+  const handleContainerClick = useCallback((e?: React.MouseEvent) => {
     // console.log('🖱️ Container clicked!', { testStarted, isActive, disabled, isCompleted, isPaused })
     if (disabled || isCompleted) {
       // console.log('❌ Click blocked by disabled/completed check')
@@ -415,14 +428,33 @@ export function InputHandler({
     }
     
     // 모바일 환경 감지
-    const mobileDetection = detectMobile()
-    const isMobile = mobileDetection?.isMobile ?? false
+    const { isMobile, isIOS } = mobileInfo
     
     if (isMobile && !testStarted && !isActive) {
       // 모바일에서도 클릭으로 시작 가능하도록 변경
       // console.log('📱 Mobile: Starting test from click')
-      maintainFocus()
-      handleTestStart() // 매바일에서도 클릭 시 시작
+      
+      // iOS에서는 사용자 인터랙션 직후에 포커스해야 키보드 활성화
+      if (isIOS && e) {
+        // 이벤트 전파 방지
+        e.preventDefault()
+        e.stopPropagation()
+        
+        // 즉시 포커스 (iOS는 터치 이벤트 컨텍스트에서만 키보드 활성화)
+        if (inputRef.current) {
+          inputRef.current.focus()
+          // 포커스 후 짧은 지연으로 키보드 안정화
+          setTimeout(() => {
+            if (inputRef.current) {
+              inputRef.current.click()
+            }
+          }, 10)
+        }
+      } else {
+        maintainFocus()
+      }
+      
+      handleTestStart() // 모바일에서도 클릭 시 시작
       if (showStartHint) {
         setShowStartHint(false)
       }
@@ -441,7 +473,7 @@ export function InputHandler({
     if (showStartHint) {
       setShowStartHint(false)
     }
-  }, [showStartHint, testStarted, isActive, isPaused, handleTestStart, onResume])
+  }, [showStartHint, testStarted, isActive, isPaused, handleTestStart, onResume, mobileInfo, disabled, isCompleted, maintainFocus])
 
   // Reset when test state changes
   useEffect(() => {
@@ -463,18 +495,20 @@ export function InputHandler({
   // Initial focus and maintain focus + Global ESC handler (모바일 최적화)
   useEffect(() => {
     const timer = setTimeout(() => {
-      maintainFocus()
-      // console.log('🎯 Initial focus set')
+      // iOS에서는 초기 자동 포커스 제한 (사용자 인터랙션 필요)
+      if (!mobileInfo.isIOS) {
+        maintainFocus()
+        // console.log('🎯 Initial focus set')
+      }
     }, 100)
     
     // 모바일 환경 감지
-    const mobileDetection = detectMobile()
-    const isMobile = mobileDetection?.isMobile ?? false
+    const { isMobile, isIOS } = mobileInfo
     
-    // 페이지 클릭 시에도 포커스 유지 (모바일에서는 빈도 줄임)
+    // 페이지 클릭 시에도 포커스 유지 (iOS 제외)
     const handlePageClick = () => {
       try {
-        if (!disabled && !isCompleted) {
+        if (!disabled && !isCompleted && !isIOS) {
           const delay = isMobile ? 50 : 10; // 모바일에서는 더 긴 지연
           setTimeout(() => maintainFocus(), delay)
         }
@@ -553,7 +587,7 @@ export function InputHandler({
       document.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
       window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
     }
-  }, [])
+  }, [disabled, isCompleted, maintainFocus, mobileInfo, onPause, onRestart])
 
   // Browser-specific adjustments
   useEffect(() => {
@@ -580,14 +614,21 @@ export function InputHandler({
       <input
         ref={inputRef}
         type="text"
-        className="absolute inset-0 w-full h-full opacity-0"
+        className="absolute inset-0 w-full h-full"
         style={{ 
+          // iOS를 위해 opacity 대신 시각적으로만 숨김
           caretColor: 'transparent',
+          color: 'transparent',
+          backgroundColor: 'transparent',
+          border: 'none',
           outline: 'none',
-          fontSize: '1px',
+          fontSize: '16px', // iOS 줌 방지를 위해 16px 이상 설정
           zIndex: 50,
           cursor: 'text',
-          pointerEvents: 'auto'
+          pointerEvents: 'auto',
+          // iOS 키보드 활성화를 위한 추가 스타일
+          WebkitUserSelect: 'text',
+          userSelect: 'text'
         }}
         onClick={handleContainerClick}
         onInput={handleInput}
@@ -602,6 +643,8 @@ export function InputHandler({
         spellCheck={false}
         tabIndex={0}
         aria-label="Typing input field"
+        // iOS 키보드 활성화를 위한 추가 속성
+        inputMode="text"
       />
       
     </div>
