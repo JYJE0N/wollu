@@ -393,7 +393,7 @@ export const useUserProgressStore = create<UserProgressStore>()(
         // 스트릭 업데이트
         get().updateStreak()
 
-          // 서버에 저장 (오프라인 모드에서도 로컬 저장은 완료됨)
+          // 서버에 저장 시도 (로컬 저장은 이미 완료됨)
           const currentState = get();
           const { userId } = currentState;
           if (userId && !userId.startsWith('offline-')) {
@@ -404,11 +404,12 @@ export const useUserProgressStore = create<UserProgressStore>()(
               })
               console.log('✅ UserProgressStore: 서버 저장 완료');
             } catch (error) {
-              console.error('❌ UserProgressStore: 서버 저장 실패', error);
-              // 서버 저장 실패해도 로컬은 유지
+              console.warn('⚠️ UserProgressStore: 서버 저장 실패 - localStorage 사용', error);
+              // 서버 저장 실패해도 로컬은 유지되므로 계속 진행
+              // 에러를 다시 throw하지 않음
             }
           } else {
-            console.log('📱 UserProgressStore: 오프라인 모드 - localStorage 저장만 수행');
+            console.log('📱 UserProgressStore: 오프라인 모드 - localStorage만 사용');
           }
 
           console.log('✅ UserProgressStore: recordTest 완료');

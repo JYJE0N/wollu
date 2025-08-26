@@ -81,10 +81,6 @@ export function calculateKoreanCharStrokes(char: string): number {
 
   const totalStrokes = chosungStrokes + jungsungStrokes + jongsungStrokes
   
-  // 디버깅용 로그 (개발 환경에서만)
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`🔤 '${char}' = ${chosung}(${chosungStrokes}) + ${jungsung}(${jungsungStrokes}) + ${jongsung}(${jongsungStrokes}) = ${totalStrokes} strokes`)
-  }
 
   return totalStrokes
 }
@@ -140,20 +136,6 @@ export function calculateKoreanStrokeCPM(
   const adjustedAccuracy = Math.max(1.0, accuracyRate) // 100% 보장
   const adjustedCPM = Math.round(rawStrokeCPM * adjustedAccuracy * 1.2)  // 20% 추가 보너스
 
-  // 디버깅 정보
-  if (process.env.NODE_ENV === 'development') {
-    console.log('🚀 몽키타입 스타일 한글 CPM 계산:', {
-      text: completedText.substring(0, 20) + '...',
-      koreanChars,
-      otherChars,
-      originalStrokes: totalStrokes,
-      adjustedStrokes: adjustedStrokes.toFixed(1),
-      timeInMinutes: timeInMinutes.toFixed(2),
-      rawStrokeCPM: rawStrokeCPM.toFixed(1),
-      accuracyRate: (accuracyRate * 100).toFixed(1) + '%',
-      finalCPM: adjustedCPM
-    })
-  }
 
   return adjustedCPM
 }

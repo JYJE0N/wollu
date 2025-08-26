@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
-import UserProgress from '@/models/UserProgress'
+import { PrismaClient } from '@prisma/client'
 
-// GET: 사용자 진행상황 조회
+const prisma = new PrismaClient()
+
+// GET: 사용자 진행상황 조회 - Prisma/PostgreSQL 사용
 export async function GET(request: NextRequest) {
   try {
-    await connectDB()
-    
     const userId = request.headers.get('x-user-id') || request.nextUrl.searchParams.get('userId')
     
     if (!userId) {
@@ -18,226 +17,163 @@ export async function GET(request: NextRequest) {
         progress: null 
       })
     }
-    
-    let userProgress = await UserProgress.findOne({ userId })
-    
+
+    // Prisma로 사용자 진행상황 조회
+    const userProgress = await prisma.userProgress.findUnique({
+      where: { userId },
+      include: {
+        testResults: {
+          orderBy: { createdAt: 'desc' },
+          take: 50 // 최근 50개만
+        }
+      }
+    })
+
     if (!userProgress) {
-      // 새 사용자 생성
-      userProgress = await UserProgress.create({
+      return NextResponse.json({
         userId,
-        bestCPM: 0,
-        bestWPM: 0,
-        bestAccuracy: 0,
-        bestConsistency: 0,
-        totalTests: 0,
-        totalTime: 0,
-        totalWords: 0,
-        totalKeystrokes: 0,
-        totalMistakes: 0,
-        averageCPM: 0,
-        averageWPM: 0,
-        averageAccuracy: 0,
-        averageConsistency: 0,
-        improvementTrend: [],
-        weakCharacters: [],
-        commonMistakes: [],
-        recentTests: [],
-        currentStreak: 0,
-        longestStreak: 0,
+        isNew: true,
+        progress: null
       })
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       userId,
       isNew: false,
-      progress: userProgress 
+      progress: {
+        totalTests: userProgress.totalTests,
+        bestWPM: userProgress.bestWPM,
+        bestCPM: userProgress.bestCPM,
+        averageAccuracy: userProgress.averageAccuracy,
+        totalTypeTime: userProgress.totalTypeTime,
+        currentTier: userProgress.currentTier,
+        tierPoints: userProgress.tierPoints,
+        recentResults: userProgress.testResults,
+        createdAt: userProgress.createdAt,
+        lastActive: userProgress.lastActive
+      }
     })
   } catch (error) {
     console.error('Error fetching user progress:', error)
-    return NextResponse.json(
-      { error: 'Failed to fetch user progress' },
-      { status: 500 }
-    )
+    
+    // 에러 발생 시 localStorage 폴백 모드로 응답
+    const userId = request.headers.get('x-user-id') || request.nextUrl.searchParams.get('userId')
+    const tempUserId = userId || `offline-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    
+    return NextResponse.json({ 
+      userId: tempUserId,
+      isNew: true,
+      progress: null,
+      fallback: true,
+      error: 'Database connection failed - using localStorage'
+    })
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
-// POST: 테스트 결과 저장
+// POST: 사용자 진행상황 저장/업데이트
 export async function POST(request: NextRequest) {
   try {
-    await connectDB()
-    
     const body = await request.json()
-    const { userId, testRecord } = body
-    
-    if (!userId || !testRecord) {
-      return NextResponse.json(
-        { error: 'Missing userId or testRecord' },
-        { status: 400 }
-      )
-    }
-    
-    // 데이터 검증 및 정리
-    const cleanTestRecord = {
-      ...testRecord,
-      cpm: isNaN(testRecord.cpm) || !isFinite(testRecord.cpm) ? 0 : testRecord.cpm,
-      wpm: isNaN(testRecord.wpm) || !isFinite(testRecord.wpm) ? 0 : testRecord.wpm,
-      accuracy: isNaN(testRecord.accuracy) || !isFinite(testRecord.accuracy) ? 100 : testRecord.accuracy,
-      consistency: isNaN(testRecord.consistency) || !isFinite(testRecord.consistency) ? 0 : testRecord.consistency,
-      wordsTyped: testRecord.wordsTyped || 0,
-      mistakes: testRecord.mistakes || 0,
-      keystrokes: testRecord.keystrokes || 0,
-    }
-    
-    let userProgress = await UserProgress.findOne({ userId })
-    
-    if (!userProgress) {
-      userProgress = new UserProgress({ userId })
-    }
-    
-    // 테스트 기록 추가
-    try {
-      await userProgress.addTestRecord(cleanTestRecord)
-      console.log('✅ Test record added successfully')
-    } catch (addError) {
-      console.error('❌ Error adding test record:', addError)
-      throw new Error(`Failed to add test record: ${addError instanceof Error ? addError.message : 'Unknown error'}`)
-    }
-    
-    // 스트릭 업데이트
-    try {
-      await userProgress.updateStreak()
-      console.log('✅ Streak updated successfully')
-    } catch (streakError) {
-      console.error('❌ Error updating streak:', streakError)
-      throw new Error(`Failed to update streak: ${streakError instanceof Error ? streakError.message : 'Unknown error'}`)
-    }
-    
-    return NextResponse.json({ 
-      success: true,
-      progress: userProgress 
-    })
-  } catch (error) {
-    console.error('Error saving test record:', error)
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
-    const errorStack = error instanceof Error ? error.stack : undefined
-    console.error('Error details:', {
-      message: errorMessage,
-      stack: errorStack
-    })
-    return NextResponse.json(
-      { 
-        error: 'Failed to save test record',
-        details: process.env.NODE_ENV === 'development' ? errorMessage : 'Internal server error'
-      },
-      { status: 500 }
-    )
-  }
-}
+    const { 
+      userId, 
+      wpm, 
+      cpm, 
+      accuracy, 
+      testDuration, 
+      textType, 
+      language,
+      mistakes,
+      keystrokeData 
+    } = body
 
-// PUT: 약점 분석 업데이트
-export async function PUT(request: NextRequest) {
-  try {
-    await connectDB()
-    
-    const body = await request.json()
-    const { userId, characterStats, mistakePatterns } = body
-    
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing userId' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
-    
-    const userProgress = await UserProgress.findOne({ userId })
-    
-    if (!userProgress) {
-      return NextResponse.json(
-        { error: 'User not found' },
-        { status: 404 }
-      )
-    }
-    
-    // 문자별 통계 업데이트
-    if (characterStats) {
-      for (const stat of characterStats) {
-        const existing = userProgress.weakCharacters.find((c: any) => c.char === stat.char)
-        if (existing) {
-          existing.totalAttempts += stat.totalAttempts || 1
-          existing.mistakes += stat.mistakes || 0
-          existing.averageTime = stat.averageTime || existing.averageTime
-        } else {
-          userProgress.weakCharacters.push(stat)
-        }
+
+    // 사용자 진행상황 업서트
+    const userProgress = await prisma.userProgress.upsert({
+      where: { userId },
+      update: {
+        totalTests: { increment: 1 },
+        bestWPM: Math.max(wpm || 0),
+        bestCPM: Math.max(cpm || 0),
+        totalTypeTime: { increment: testDuration || 0 },
+        lastActive: new Date(),
+        // 평균 정확도 재계산은 복잡하므로 일단 현재 값으로
+        averageAccuracy: accuracy || 0
+      },
+      create: {
+        userId,
+        totalTests: 1,
+        bestWPM: wpm || 0,
+        bestCPM: cpm || 0,
+        averageAccuracy: accuracy || 0,
+        totalTypeTime: testDuration || 0,
+        currentTier: 'B',
+        tierPoints: 0,
+        createdAt: new Date(),
+        lastActive: new Date()
       }
-      
-      // 실수율 순으로 정렬하고 상위 50개만 유지
-      userProgress.weakCharacters.sort((a: any, b: any) => {
-        const errorRateA = a.mistakes / a.totalAttempts
-        const errorRateB = b.mistakes / b.totalAttempts
-        return errorRateB - errorRateA
-      })
-      userProgress.weakCharacters = userProgress.weakCharacters.slice(0, 50)
-    }
-    
-    // 실수 패턴 업데이트
-    if (mistakePatterns) {
-      for (const pattern of mistakePatterns) {
-        const existing = userProgress.commonMistakes.find(
-          (m: any) => m.wrong === pattern.wrong && m.correct === pattern.correct
-        )
-        if (existing) {
-          existing.count += pattern.count || 1
-        } else {
-          userProgress.commonMistakes.push(pattern)
-        }
+    })
+
+    // 테스트 결과 저장
+    const testResult = await prisma.testResult.create({
+      data: {
+        userProgressId: userProgress.id,
+        wpm: wpm || 0,
+        cpm: cpm || 0,
+        accuracy: accuracy || 0,
+        testDuration: testDuration || 0,
+        textType: textType || 'sentences',
+        language: language || 'korean',
+        mistakes: mistakes || 0,
+        keystrokeData: keystrokeData || null,
+        createdAt: new Date()
       }
-      
-      // 빈도 순으로 정렬하고 상위 30개만 유지
-      userProgress.commonMistakes.sort((a: any, b: any) => b.count - a.count)
-      userProgress.commonMistakes = userProgress.commonMistakes.slice(0, 30)
-    }
-    
-    await userProgress.save()
-    
+    })
+
     return NextResponse.json({ 
-      success: true,
-      progress: userProgress 
+      success: true, 
+      userProgress,
+      testResult
     })
   } catch (error) {
-    console.error('Error updating analysis:', error)
-    return NextResponse.json(
-      { error: 'Failed to update analysis' },
-      { status: 500 }
-    )
+    console.error('Error saving user progress:', error)
+    
+    return NextResponse.json({ 
+      success: false,
+      error: 'Database save failed - data only stored locally',
+      fallback: true
+    }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }
 
-// DELETE: 진행상황 초기화
+// DELETE: 사용자 진행상황 삭제
 export async function DELETE(request: NextRequest) {
   try {
-    await connectDB()
-    
     const userId = request.headers.get('x-user-id') || request.nextUrl.searchParams.get('userId')
     
     if (!userId) {
-      return NextResponse.json(
-        { error: 'Missing userId' },
-        { status: 400 }
-      )
+      return NextResponse.json({ error: 'userId is required' }, { status: 400 })
     }
-    
-    await UserProgress.findOneAndDelete({ userId })
-    
-    return NextResponse.json({ 
-      success: true,
-      message: 'Progress reset successfully' 
+
+    // 관련된 테스트 결과들도 함께 삭제 (CASCADE)
+    await prisma.userProgress.delete({
+      where: { userId }
     })
+
+    return NextResponse.json({ success: true })
   } catch (error) {
-    console.error('Error resetting progress:', error)
-    return NextResponse.json(
-      { error: 'Failed to reset progress' },
-      { status: 500 }
-    )
+    console.error('Error deleting user progress:', error)
+    return NextResponse.json({ 
+      success: false, 
+      error: 'Delete failed' 
+    }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

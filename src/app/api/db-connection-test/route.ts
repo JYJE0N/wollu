@@ -1,27 +1,29 @@
 import { NextResponse } from 'next/server'
-import connectDB from '@/lib/mongodb'
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 export async function GET() {
   try {
-    console.log('MONGODB_URI:', process.env.MONGODB_URI ? 'Set' : 'Not set')
-    console.log('Attempting MongoDB connection...')
+    // Prisma를 통한 PostgreSQL 연결 테스트
+    await prisma.$queryRaw`SELECT 1`
     
-    await connectDB()
-    
-    console.log('MongoDB connection successful')
-    return NextResponse.json({
-      success: true,
-      message: 'MongoDB connection successful'
+    return NextResponse.json({ 
+      success: true, 
+      message: 'PostgreSQL connection successful',
+      database: 'PostgreSQL via Prisma',
+      timestamp: new Date().toISOString()
     })
   } catch (error: any) {
-    console.error('MongoDB connection error:', error.message)
-    console.error('Error details:', error)
+    console.error('Database connection error:', error)
     
-    return NextResponse.json({
-      success: false,
-      message: 'MongoDB connection failed',
+    return NextResponse.json({ 
+      success: false, 
+      message: 'PostgreSQL connection failed',
       error: error.message,
-      details: error.name
+      timestamp: new Date().toISOString()
     }, { status: 500 })
+  } finally {
+    await prisma.$disconnect()
   }
 }

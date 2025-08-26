@@ -117,6 +117,8 @@ export function useTypingTestController() {
 
   // 키 입력 처리 (언어 감지 포함)
   const handleKeyPress = useCallback((key: string) => {
+    console.log(`🎮 TypingTestController.handleKeyPress received: "${key}"`)
+    
     // 언어 불일치 감지 (한글/영문 텍스트에서만)
     const textLanguage = detectTextLanguage(targetText);
     if (textLanguage !== 'mixed' && userInput.length > 0) {
@@ -140,8 +142,10 @@ export function useTypingTestController() {
     }
     
     // 타이핑 스토어의 handleKeyPress 호출 (상태 업데이트)
+    console.log(`📞 TypingTestController calling typingStore.handleKeyPress("${key}")`)
     const storeHandleKeyPress = useTypingStore.getState().handleKeyPress;
     storeHandleKeyPress(key);
+    console.log(`✅ TypingTestController typingStore.handleKeyPress call completed`)
 
     const currentChar = getCurrentChar();
     if (!currentChar) return;

@@ -1,7 +1,5 @@
 import { create } from 'zustand'
 import { Keystroke, Mistake } from '@/types'
-import { isKoreanJamo } from '@/utils/koreanIME'
-// import { eventBus } from '@/utils/eventBus' // EventBus 제거 - 순환참조 방지
 import { typingEffectsManager } from '@/utils/typingEffects'
 import { useSettingsStore } from './settingsStore'
 
@@ -247,7 +245,7 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
   // Resume test
   resumeTest: () => {
     console.log('▶️ Test resumed')
-    set({ isPaused: false })
+    set({ isPaused: false, isActive: true })
   },
 
   // Stop test (완전 중단)
@@ -299,13 +297,21 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
     })
   },
 
-  // Handle key press
+  // Handle key press - 브라우저 IME 기반 효율적 처리
   handleKeyPress: (key: string) => {
+    console.log(`🎯 typingStore.handleKeyPress called with: "${key}"`)
     const state = get()
     
+    console.log(`📊 Current state:`, {
+      isActive: state.isActive,
+      isCompleted: state.isCompleted,
+      isCountingDown: state.isCountingDown,
+      currentIndex: state.currentIndex
+    })
+    
     // Check test state
-    if (!state.isActive || state.isCompleted || state.isPaused || state.isCountingDown) {
-      console.log('❌ Input blocked: test not active, completed, paused, or counting down', {
+    if (state.isCompleted || state.isCountingDown) {
+      console.log('❌ Input blocked: test completed or counting down', {
         isActive: state.isActive,
         isCompleted: state.isCompleted,
         isPaused: state.isPaused,
@@ -314,52 +320,24 @@ export const useTypingStore = create<TypingStore>((set, get) => ({
       return
     }
 
-    // 한글 자모는 기록하되, 진행은 하지 않음 (CPM 계산용)
-    if (isKoreanJamo(key)) {
-      console.log(`🔤 Recording Korean jamo for CPM: "${key}"`)
-      const currentTime = Date.now()
-      const lastKeystroke = state.keystrokes[state.keystrokes.length - 1]
-      const timeDelta = lastKeystroke ? currentTime - lastKeystroke.timestamp : 0
-      
-      // 한글 자모도 키스트로크로 기록 (타이핑 노력으로 인정)
-      const jamoKeystroke: Keystroke = {
-        key,
-        timestamp: currentTime,
-        correct: true, // 한글 조합 과정의 모든 키스트로크를 유효한 타이핑으로 인정
-        timeDelta
-      }
-      
-      set({ 
-        keystrokes: [...state.keystrokes, jamoKeystroke],
-        lastProcessedChar: key,
-        lastProcessedTime: currentTime
-      })
-      
-      // 통계 업데이트 제거 - 무한 루프 방지
-      return
+    // 비활성 상태에서 첫 입력 시 자동 시작
+    if (!state.isActive && !state.startTime && !state.isPaused) {
+      console.log('🚀 Auto-starting test with first input')
+      const actions = get()
+      actions.startTest()
     }
+
+    // 브라우저 IME에 의존 - 자모 처리 제거
 
     // Check for duplicate input
     if (isDuplicateInput(state, key)) {
       return
     }
 
-    // Auto-start 완전 비활성화 - 무한 루프 방지
-    // if (!state.isActive && !state.startTime) {
-    //   console.log('🚀 Auto-starting test')
-    //   get().startTest()
-    // }
-
     // Get expected character
     const expectedChar = state.targetText[state.currentIndex]
     if (!expectedChar) {
       console.log('⚠️ No more characters to type')
-      
-      // 텍스트 끝 완료 로직 제거 - 무한 루프 방지
-      // if (key === '\n' || key === ' ') {
-      //   console.log(`🏁 Text completed with ${key === '\n' ? 'Enter' : 'Space'} key at end`)
-      //   setTimeout(() => get().completeTest(), 50)
-      // }"}
       return
     }
 

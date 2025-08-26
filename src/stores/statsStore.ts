@@ -117,21 +117,15 @@ export const useStatsStore = create<StatsStore>((set) => {
     let wpm = 0
     let rawWpm = 0
 
-    // 한글 포함 여부에 따른 CPM/WPM 계산 방식 분기 (메모이제이션 적용)
-    if (memoizedContainsKorean(actualUserInput)) {
-      // 🇰🇷 한글 스트로크 기반 계산 (실제 입력 기준, 오타 포함)
-      rawCpm = memoizedCalculateKoreanStrokeCPM(actualUserInput, minutes, 1.0) // 정확도 보정 없음
-      cpm = memoizedCalculateKoreanStrokeCPM(actualUserInput, minutes, accuracyRate) // 약간의 정확도 보정만
-      rawWpm = memoizedCalculateKoreanStrokeWPM(actualUserInput, minutes, 1.0)
-      wpm = memoizedCalculateKoreanStrokeWPM(actualUserInput, minutes, accuracyRate)
+    // 한글 포함 여부에 따른 CPM/WPM 계산 방식 분기 (원본 텍스트 기준 판단)
+    if (memoizedContainsKorean(currentText)) {
+      // 🇰🇷 한글 스트로크 기반 계산 (완성된 부분만, 정확한 스트로크 계산)
+      const completedText = currentText.substring(0, currentIndex)
+      rawCpm = memoizedCalculateKoreanStrokeCPM(completedText, minutes, 1.0) // 정확도 보정 없음
+      cpm = memoizedCalculateKoreanStrokeCPM(completedText, minutes, accuracyRate) // 약간의 정확도 보정만
+      rawWpm = memoizedCalculateKoreanStrokeWPM(completedText, minutes, 1.0)
+      wpm = memoizedCalculateKoreanStrokeWPM(completedText, minutes, accuracyRate)
 
-      // 추가 통계 정보 로그 (메모이제이션 적용)
-      const strokeAnalysis = memoizedAnalyzeTextStrokes(actualUserInput)
-      console.log('🎯 한글 스트로크 분석 (오타 포함):', {
-        text: actualUserInput.length > 20 ? actualUserInput.substring(0, 20) + '...' : actualUserInput,
-        expectedText: currentText.substring(0, 20) + '...',
-        ...strokeAnalysis
-      })
       
     } else {
       // 🌍 영문/기타 언어 기존 계산 방식
@@ -149,7 +143,9 @@ export const useStatsStore = create<StatsStore>((set) => {
     const mistakeRate = keystrokesCount > 0 ? mistakeCount / keystrokesCount : 0
     const consistency = Math.round(100 - (mistakeRate * 60)) // 실수 영향 완화
 
-    console.log(`🚀 월급루팡 통계 (${memoizedContainsKorean(actualUserInput) ? '한글' : '영문'}, ${textType}):`, {
+    // 언어 감지: 원본 텍스트 기준으로 판단
+    const isKoreanText = memoizedContainsKorean(currentText)
+    console.log(`🚀 월급루팡 통계 (${isKoreanText ? '한글' : '영문'}, ${textType}):`, {
       timeElapsed: timeElapsed.toFixed(2),
       completedChars: currentIndex,
       keystrokesCount,

@@ -3,7 +3,7 @@
 import { IoStop, IoPauseSharp, IoPlay, IoReloadCircle } from "react-icons/io5";
 import { FaKeyboard } from "react-icons/fa6";
 import { TextRenderer } from "./TextRenderer";
-import { InputHandler } from "./InputHandler";
+import { InputHandler } from "./InputHandler.v2";
 import { TypingVisualizer } from "./TypingVisualizer";
 import { KeyboardShortcuts } from "@/components/ui/KeyboardShortcuts";
 import { CharacterProgressSlider } from "@/components/ui/ProgressSlider";

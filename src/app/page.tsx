@@ -11,6 +11,7 @@ import { useSettingsStore, initializeTheme } from "@/stores/settingsStore";
 import { useTypingStore } from "@/stores/typingStore";
 import { getLanguagePack } from "@/modules/languages";
 import { TextGenerator } from "@/utils/textGenerator";
+import { ConditionalMobileDebugPanel } from "@/components/debug/MobileDebugPanel";
 
 // URL 파라미터 처리를 위한 별도 컴포넌트
 function UrlParamHandler() {

@@ -138,8 +138,8 @@ class TestCompletionManager {
       
       console.log('💾 TestCompletionManager: 데이터 저장 완료');
     } catch (error) {
-      console.error('❌ TestCompletionManager: 저장 실패', error);
-      throw error;
+      console.warn('⚠️ TestCompletionManager: 저장 실패하지만 계속 진행', error);
+      // 저장 실패해도 사용자 경험을 위해 에러를 다시 throw하지 않음
     }
   }
 
