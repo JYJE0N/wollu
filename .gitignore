@@ -146,3 +146,5 @@ yarn-wrapper.sh
 
 # Scripts directory
 scripts/
+
+/generated/prisma

@@ -1,0 +1,183 @@
+// Wollu Typing Practice PostgreSQL Schema
+// MongoDB에서 PostgreSQL로 마이그레이션된 스키마
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// 사용자 진행률 메인 테이블
+model UserProgress {
+  id       String @id @default(cuid())
+  userId   String @unique @db.VarChar(255)
+  username String? @db.VarChar(100)
+  email    String? @db.VarChar(255)
+
+  // 최고 기록
+  bestCPM        Int @default(0)
+  bestWPM        Int @default(0)
+  bestAccuracy   Float @default(0) @db.DoublePrecision
+  bestConsistency Float @default(0) @db.DoublePrecision
+
+  // 누적 통계
+  totalTests     Int @default(0)
+  totalTime      Int @default(0) // seconds
+  totalWords     Int @default(0)
+  totalKeystrokes Int @default(0)
+  totalMistakes  Int @default(0)
+
+  // 평균 통계
+  averageCPM        Float @default(0) @db.DoublePrecision
+  averageWPM        Float @default(0) @db.DoublePrecision
+  averageAccuracy   Float @default(0) @db.DoublePrecision
+  averageConsistency Float @default(0) @db.DoublePrecision
+
+  // 향상도 추적 (최근 10개)
+  improvementTrend Int[] @default([])
+  lastTestDate     DateTime?
+
+  // 스트릭
+  currentStreak   Int @default(0)
+  longestStreak   Int @default(0)
+  lastStreakDate  DateTime?
+
+  // 게임화 요소
+  tierInfo TierInfo?
+  promotion Promotion?
+
+  // 관계
+  testRecords     TestRecord[]
+  badges          Badge[]
+  weakCharacters  CharacterStats[]
+  commonMistakes  MistakePattern[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([bestWPM(sort: Desc)])
+  @@index([totalTests(sort: Desc)])
+  @@map("user_progress")
+}
+
+// 테스트 기록
+model TestRecord {
+  id       String @id @default(cuid())
+  
+  date        DateTime
+  mode        String @db.VarChar(50)
+  textType    String @db.VarChar(50)
+  language    String @db.VarChar(10)
+  duration    Int // seconds
+  wordsTyped  Int
+  cpm         Int
+  wpm         Int
+  accuracy    Float @db.DoublePrecision
+  consistency Float @default(0) @db.DoublePrecision
+  mistakes    Int
+  keystrokes  Int
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String
+
+  @@index([date(sort: Desc)])
+  @@index([userProgressId, date(sort: Desc)])
+  @@map("test_records")
+}
+
+// 등급 정보
+model TierInfo {
+  id         String @id @default(cuid())
+  tier       TierType @default(BRONZE)
+  tierPoints Int @default(0)
+  totalXP    Int @default(0)
+  level      Int @default(1)
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String @unique
+
+  @@map("tier_info")
+}
+
+// 승급전 정보
+model Promotion {
+  id           String @id @default(cuid())
+  isActive     Boolean @default(false)
+  fromTier     String @default("")
+  toTier       String @default("")
+  attempts     Int @default(0)
+  progress     Float @default(0) @db.DoublePrecision // 0-100
+  requiredWins Int @default(3)
+  currentWins  Int @default(0)
+  lastAttempt  DateTime?
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String @unique
+
+  @@map("promotions")
+}
+
+// 배지
+model Badge {
+  id          String @id @default(cuid())
+  badgeId     String @db.VarChar(100) // 배지 고유 식별자
+  name        String @db.VarChar(100)
+  description String @db.Text
+  icon        String @db.VarChar(100)
+  unlockedAt  DateTime
+  value       Int? // 달성 시 기록값
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String
+
+  @@index([userProgressId, unlockedAt(sort: Desc)])
+  @@map("badges")
+}
+
+// 문자별 통계
+model CharacterStats {
+  id            String @id @default(cuid())
+  char          String @db.VarChar(10)
+  totalAttempts Int @default(0)
+  mistakes      Int @default(0)
+  averageTime   Float @default(0) @db.DoublePrecision // milliseconds
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String
+
+  @@index([userProgressId, mistakes(sort: Desc)])
+  @@map("character_stats")
+}
+
+// 실수 패턴
+model MistakePattern {
+  id      String @id @default(cuid())
+  wrong   String @db.VarChar(50)
+  correct String @db.VarChar(50)
+  count   Int @default(1)
+
+  // 관계
+  userProgress   UserProgress @relation(fields: [userProgressId], references: [id], onDelete: Cascade)
+  userProgressId String
+
+  @@index([userProgressId, count(sort: Desc)])
+  @@map("mistake_patterns")
+}
+
+// 등급 열거형
+enum TierType {
+  BRONZE
+  SILVER
+  GOLD
+  PLATINUM
+  DIAMOND
+}
