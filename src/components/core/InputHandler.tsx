@@ -4,6 +4,9 @@ import { useEffect, useRef, useCallback, useState, useMemo } from 'react'
 import { useTypingStore } from '@/stores/typingStore'
 import { IMEHandler, isKoreanJamo, getBrowserType, isCompletedKorean } from '@/utils/koreanIME'
 import { detectMobile } from '@/utils/mobileDetection'
+import { useIPadVirtualKeyboard } from '@/utils/virtualKeyboardDetection'
+import { useTouchInputDetection } from '@/utils/touchInputDetection'
+import { shouldDelayKoreanInput } from '@/utils/koreanCompositionValidator'
 
 interface InputHandlerProps {
   onKeyPress: (key: string) => void
@@ -33,9 +36,16 @@ export function InputHandler({
   const processedInputRef = useRef<Set<string>>(new Set())
   const browserType = useRef(getBrowserType())
   
+  // iPad 전용 상태 관리
+  const iPadKeyboard = useIPadVirtualKeyboard()
+  useTouchInputDetection() // 사용하지 않지만 상태 추적을 위해 유지
+  
   // State for test start
   const [testStarted, setTestStarted] = useState(false)
   const [showStartHint, setShowStartHint] = useState(true)
+  
+  // iPad 전용 상태
+  const compositionTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   
   const { isCompleted, isActive, isCountingDown, isPaused, setCompositionState } = useTypingStore()
 
@@ -82,8 +92,18 @@ export function InputHandler({
             // iPad는 키보드 활성화가 더 까다로우므로 추가 속성 필요
             input.setAttribute('enterkeyhint', 'done')
             input.setAttribute('pattern', '[\\s\\S]*') // 모든 문자 허용
-            // iPad Safari에서 키보드 활성화를 위한 강제 편집 가능 상태
-            input.setAttribute('contenteditable', 'true')
+            
+            // iPad에서 가상 키보드와 IME 충돌 해결
+            if (iPadKeyboard.isIPadVirtualKeyboard) {
+              // 가상 키보드 활성화시 contenteditable 비활성화
+              input.removeAttribute('contenteditable')
+              // 대신 일반 input으로 처리하고 IME 지연 처리
+              input.setAttribute('inputmode', 'text')
+            } else {
+              // iPad Safari에서 키보드 활성화를 위한 강제 편집 가능 상태
+              input.setAttribute('contenteditable', 'true')
+            }
+            
             input.style.webkitUserSelect = 'text'
             // TypeScript에서 인식하지 못하는 webkit 속성은 setAttribute로 설정
             input.style.setProperty('-webkit-touch-callout', 'default')
@@ -123,16 +143,54 @@ export function InputHandler({
     }
   }, [testStarted, isActive, onTestStart])
 
+  // iPad 전용 한글 조합 처리 함수
+  const handleIPadKoreanInput = useCallback((input: string, processCharFunc: (char: string) => void) => {
+    if (!iPadKeyboard.isIPadVirtualKeyboard) {
+      return true; // 일반 처리
+    }
+
+    const delayInfo = shouldDelayKoreanInput(input, true);
+    
+    if (!delayInfo.shouldDelay) {
+      return true; // 즉시 처리
+    }
+
+    // 조합 대기 처리
+    if (compositionTimeoutRef.current) {
+      clearTimeout(compositionTimeoutRef.current);
+    }
+
+    compositionTimeoutRef.current = setTimeout(() => {
+      const lastChar = input[input.length - 1];
+      if (lastChar) {
+        processCharFunc(lastChar);
+      }
+    }, delayInfo.waitTime) as NodeJS.Timeout;
+
+    return false; // 처리 지연
+  }, [iPadKeyboard.isIPadVirtualKeyboard]);
+
   // Process character input (unified handler)
   const processCharacter = useCallback((char: string) => {
+    // iPad에서 한글 조합 처리 (순환참조 방지를 위해 processCharacter 대신 onKeyPress 사용)
+    if (iPadKeyboard.isIPad && isKoreanJamo(char)) {
+      const shouldProcess = handleIPadKoreanInput(char, (processedChar: string) => {
+        onKeyPress(processedChar);
+      });
+      if (!shouldProcess) {
+        return; // 조합 대기 중
+      }
+    }
+    
     // Skip only incomplete Korean jamo, allow completed Korean characters (가-힣)
     if (isKoreanJamo(char) && !isCompletedKorean(char)) {
       return
     }
 
-    // Check for duplicate processing
+    // Check for duplicate processing with enhanced timing for iPad
     const now = Date.now()
-    const charId = `${char}-${Math.floor(now / 100)}` // 100ms window
+    const timeWindow = iPadKeyboard.isIPadVirtualKeyboard ? 200 : 100; // iPad는 더 긴 중복방지 시간
+    const charId = `${char}-${Math.floor(now / timeWindow)}`
     if (processedInputRef.current.has(charId)) {
       return
     }
@@ -147,19 +205,18 @@ export function InputHandler({
     const actualIsActive = currentStore.isActive
     const actualIsCountingDown = currentStore.isCountingDown
     
-    
     // 테스트가 활성화된 상태에만 키 입력 처리 (스토어 직접 확인)
     if (actualIsActive && !actualIsCountingDown) {
       onKeyPress(char)
-    } else {
     }
     
-    // Mark as processed (clear after 200ms to prevent memory leak)
+    // Mark as processed (clear after enhanced timeout for iPad)
     processedInputRef.current.add(charId)
+    const clearTimeout = iPadKeyboard.isIPadVirtualKeyboard ? 400 : 200;
     setTimeout(() => {
       processedInputRef.current.delete(charId)
-    }, 200)
-  }, [testStarted, onKeyPress, handleTestStart])
+    }, clearTimeout)
+  }, [testStarted, onKeyPress, handleTestStart, iPadKeyboard.isIPadVirtualKeyboard, iPadKeyboard.isIPad, handleIPadKoreanInput, isActive, isCountingDown])
 
   // Handle direct input (모바일 최적화 포함)
   const handleInput = useCallback((event: React.FormEvent<HTMLInputElement>) => {
@@ -228,7 +285,7 @@ export function InputHandler({
       // Clear input to prevent accumulation
       target.value = ''
     }
-  }, [disabled, isCompleted, processCharacter, mobileInfo.isMobile, testStarted, onTestStart, onKeyPress, handleTestStart])
+  }, [disabled, isCompleted, processCharacter, mobileInfo.isMobile, testStarted, onTestStart, onKeyPress, handleTestStart, isActive, isCountingDown])
 
   // Handle keyboard events (전역 이벤트 처리 제외 문자만)
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -338,7 +395,7 @@ export function InputHandler({
         }
       }
     }
-  }, [disabled, isCompleted, isPaused, onBackspace, onResume, onPause, onRestart, processCharacter])
+  }, [disabled, isCompleted, isPaused, onBackspace, onResume, onPause, onRestart, processCharacter, isActive, isCountingDown])
 
   // Composition event handlers (for IME)
   const handleCompositionStart = useCallback((event: React.CompositionEvent) => {
@@ -387,11 +444,20 @@ export function InputHandler({
         // 활성화 상태 확인
         const currentStore = useTypingStore.getState()
         if (currentStore.isActive && !currentStore.isCountingDown && composedText) {
-          // 완성된 한글 문자만 처리 (composition에서 온 전체 텍스트)
-          for (const char of composedText) {
-            // 완성된 한글이거나 한글 자모가 아닌 경우만
-            if (isCompletedKorean(char) || !isKoreanJamo(char)) {
-              onKeyPress(char)
+          // iPad에서는 조합이 완료된 문자만 처리
+          if (iPadKeyboard.isIPadVirtualKeyboard) {
+            // iPad 가상 키보드에서는 완성된 한글 문자 또는 조합 완료된 문자만
+            for (const char of composedText) {
+              if (isCompletedKorean(char) || (!isKoreanJamo(char))) {
+                onKeyPress(char)
+              }
+            }
+          } else {
+            // 일반 모바일 처리
+            for (const char of composedText) {
+              if (isCompletedKorean(char) || !isKoreanJamo(char)) {
+                onKeyPress(char)
+              }
             }
           }
         }
@@ -426,7 +492,7 @@ export function InputHandler({
     } catch (error) {
       console.error('❌ Error in handleCompositionEnd:', error)
     }
-  }, [testStarted, onCompositionChange, mobileInfo.isMobile, handleTestStart, onKeyPress, processCharacter, setCompositionState])
+  }, [testStarted, onCompositionChange, mobileInfo.isMobile, handleTestStart, onKeyPress, processCharacter, setCompositionState, iPadKeyboard.isIPadVirtualKeyboard, handleIPadKoreanInput])
 
   // Handle click to focus and start test (모바일 최적화)
   const handleContainerClick = useCallback((e?: React.MouseEvent) => {
@@ -595,6 +661,16 @@ export function InputHandler({
       document.removeEventListener('click', handlePageClick)
       document.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
       window.removeEventListener('keydown', handleGlobalKeyDown, { capture: true })
+      
+      // iPad 전용 cleanup
+      if (compositionTimeoutRef.current) {
+        clearTimeout(compositionTimeoutRef.current)
+        compositionTimeoutRef.current = null
+      }
+      
+      // Clear any remaining processed inputs
+      const currentProcessedInputs = processedInputRef.current
+      currentProcessedInputs.clear()
     }
   }, [disabled, isCompleted, maintainFocus, mobileInfo, onPause, onRestart])
 

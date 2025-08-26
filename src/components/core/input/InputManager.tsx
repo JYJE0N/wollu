@@ -3,7 +3,9 @@ import { useTypingStore } from '@/stores/typingStore'
 import { InputHandlerConfig } from './types'
 import { DesktopInputComponent } from './DesktopInputHandler'
 
-interface InputManagerProps extends InputHandlerConfig {}
+interface InputManagerProps extends InputHandlerConfig {
+  forceMode?: 'desktop' | 'mobile' | 'tablet'
+}
 
 /**
  * 단순화된 입력 관리자

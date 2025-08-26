@@ -1,4 +1,32 @@
-import { IBadge, ITierInfo, IPromotion } from '@/models/UserProgress'
+// 게임화 시스템을 위한 타입 정의 (이전 MongoDB 모델 대신)
+interface IBadge {
+  id: string
+  name: string
+  description: string
+  icon: string
+  condition?: string
+  points?: number
+  value?: number
+  unlockedAt?: Date
+}
+
+interface ITierInfo {
+  tier: string
+  tierPoints: number
+  totalXP: number
+  level: number
+}
+
+interface IPromotion {
+  isActive: boolean
+  fromTier: string
+  toTier: string
+  attempts: number
+  progress: number
+  requiredWins: number
+  currentWins: number
+  lastAttempt?: Date
+}
 
 // 등급 시스템 정의
 export const TIER_THRESHOLDS = {

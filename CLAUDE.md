@@ -82,10 +82,66 @@ This project uses `cross-env` to ensure environment variables work consistently 
 - 이벤트 경로 복잡성: input, composition, keydown 이벤트가 교차 처리
 
 ### 해결 방안
+
+#### 일반적 해결방안
 - 통합된 입력 처리 시스템: 플랫폼별 분기를 줄이고 일관된 입력 경로 구축
 - 명확한 활성화 플로우: 모든 디바이스에서 동일한 "클릭 → 포커스 → 타이핑 시작" 흐름
 - 상태 관리 단순화: React 상태와 DOM 상태 동기화 개선
 - 디바이스별 최적화: 각 플랫폼의 특성을 살린 별도 컴포넌트 분리
+
+#### 아이패드 미니 가상 키보드 한글 자모조합 문제 해결방안
+
+1. **가상 키보드 감지 및 특별 처리**
+   ```typescript
+   // Virtual Keyboard API 또는 viewport 변화 감지
+   const isVirtualKeyboard = useVirtualKeyboardDetection();
+   const compositionTimeout = isVirtualKeyboard ? 150 : 50; // 더 긴 대기시간
+   ```
+
+2. **IME 조합 상태 강화**
+   ```typescript
+   // 한글 자모 조합 완료 대기 로직
+   const [pendingComposition, setPendingComposition] = useState('');
+   const handleCompositionUpdate = (e: CompositionEvent) => {
+     // 자모가 완전한 한글 문자로 조합될 때까지 대기
+     if (isIncompleteKoreanJamo(e.data)) {
+       setPendingComposition(e.data);
+       return; // 입력 처리 지연
+     }
+   };
+   ```
+
+3. **터치 입력 전용 처리**
+   ```typescript
+   // 터치 기반 입력과 물리 키보드 입력 구분
+   const isTouchInput = useTouchInputDetection();
+   if (isTouchInput) {
+     // 터치 입력 시 debounce 시간 연장 (100ms → 200ms)
+     debouncedInputHandler = debounce(handleInput, 200);
+   }
+   ```
+
+4. **자모 조합 완료 검증**
+   ```typescript
+   // 불완전한 자모 입력 감지 및 재조합
+   const validateKoreanComposition = (input: string) => {
+     const lastChar = input[input.length - 1];
+     if (isKoreanJamo(lastChar) && !isCompleteHangul(lastChar)) {
+       // 자모 조합 미완료 - 추가 입력 대기
+       return false;
+     }
+     return true;
+   };
+   ```
+
+5. **iPad 전용 입력 핸들러**
+   ```typescript
+   // iPad mini에서 contenteditable과 IME 충돌 해결
+   if (isIPad && isVirtualKeyboard) {
+     // contenteditable 비활성화, input 요소로 대체
+     useAlternativeInputMethod();
+   }
+   ```
 
 ## Critical Development Conventions
 

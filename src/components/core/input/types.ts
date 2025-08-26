@@ -10,6 +10,9 @@ export interface InputHandlerConfig {
   onKeyPress: (key: string) => void
   onBackspace: () => void
   onTestStart: () => void
+  onResume?: () => void
+  onPause?: () => void
+  onRestart?: () => void
   onCompositionChange?: (isComposing: boolean) => void
   disabled?: boolean
   className?: string

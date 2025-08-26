@@ -22,10 +22,11 @@ export async function GET(request: NextRequest) {
     const userProgress = await prisma.userProgress.findUnique({
       where: { userId },
       include: {
-        testResults: {
-          orderBy: { createdAt: 'desc' },
+        testRecords: {
+          orderBy: { date: 'desc' },
           take: 50 // 최근 50개만
-        }
+        },
+        tierInfo: true
       }
     })
 
@@ -45,12 +46,12 @@ export async function GET(request: NextRequest) {
         bestWPM: userProgress.bestWPM,
         bestCPM: userProgress.bestCPM,
         averageAccuracy: userProgress.averageAccuracy,
-        totalTypeTime: userProgress.totalTypeTime,
-        currentTier: userProgress.currentTier,
-        tierPoints: userProgress.tierPoints,
-        recentResults: userProgress.testResults,
+        totalTime: userProgress.totalTime,
+        currentTier: userProgress.tierInfo?.tier || 'BRONZE',
+        tierPoints: userProgress.tierInfo?.tierPoints || 0,
+        recentResults: userProgress.testRecords,
         createdAt: userProgress.createdAt,
-        lastActive: userProgress.lastActive
+        lastTestDate: userProgress.lastTestDate
       }
     })
   } catch (error) {
@@ -99,8 +100,8 @@ export async function POST(request: NextRequest) {
         totalTests: { increment: 1 },
         bestWPM: Math.max(wpm || 0),
         bestCPM: Math.max(cpm || 0),
-        totalTypeTime: { increment: testDuration || 0 },
-        lastActive: new Date(),
+        totalTime: { increment: testDuration || 0 },
+        lastTestDate: new Date(),
         // 평균 정확도 재계산은 복잡하므로 일단 현재 값으로
         averageAccuracy: accuracy || 0
       },
@@ -110,34 +111,33 @@ export async function POST(request: NextRequest) {
         bestWPM: wpm || 0,
         bestCPM: cpm || 0,
         averageAccuracy: accuracy || 0,
-        totalTypeTime: testDuration || 0,
-        currentTier: 'B',
-        tierPoints: 0,
-        createdAt: new Date(),
-        lastActive: new Date()
+        totalTime: testDuration || 0,
+        lastTestDate: new Date()
       }
     })
 
     // 테스트 결과 저장
-    const testResult = await prisma.testResult.create({
+    const testRecord = await prisma.testRecord.create({
       data: {
         userProgressId: userProgress.id,
-        wpm: wpm || 0,
-        cpm: cpm || 0,
-        accuracy: accuracy || 0,
-        testDuration: testDuration || 0,
+        date: new Date(),
+        mode: 'time', // 기본값
         textType: textType || 'sentences',
         language: language || 'korean',
+        duration: testDuration || 0,
+        wordsTyped: Math.floor((cpm || 0) * (testDuration || 60) / 60 / 5), // 추정값
+        cpm: cpm || 0,
+        wpm: wpm || 0,
+        accuracy: accuracy || 0,
         mistakes: mistakes || 0,
-        keystrokeData: keystrokeData || null,
-        createdAt: new Date()
+        keystrokes: Math.floor((cpm || 0) * (testDuration || 60) / 60) // 추정값
       }
     })
 
     return NextResponse.json({ 
       success: true, 
       userProgress,
-      testResult
+      testRecord
     })
   } catch (error) {
     console.error('Error saving user progress:', error)

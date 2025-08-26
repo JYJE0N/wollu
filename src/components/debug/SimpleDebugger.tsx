@@ -11,7 +11,7 @@ export function SimpleDebugger() {
     const originalWarn = console.warn
     const originalError = console.error
 
-    let logBuffer: string[] = []
+    const logBuffer: string[] = []
     let logCount = 0
 
     const showAlert = (message: string, type: string) => {
