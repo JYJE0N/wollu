@@ -1,0 +1,59 @@
+# Handle line endings automatically for files detected as text
+# and leave all files detected as binary untouched.
+* text=auto
+
+# The above will handle all files NOT found below
+
+# These files are text and should be normalized (Convert crlf => lf)
+*.css text
+*.html text
+*.js text
+*.jsx text
+*.ts text
+*.tsx text
+*.json text
+*.md text
+*.txt text
+*.xml text
+*.yaml text
+*.yml text
+
+# These files are binary and should be left untreated
+# (binary is a macro for -text -diff)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.eot binary
+*.ttf binary
+*.otf binary
+*.svg binary
+*.mp3 binary
+*.mp4 binary
+*.wav binary
+*.mov binary
+*.pdf binary
+
+# Korean language files
+*.module.json text
+*.theme.json text
+
+# Ensure line endings are consistent for these files
+package.json text
+package-lock.json text
+yarn.lock text
+.gitignore text
+.gitattributes text
+.eslintrc.json text
+tsconfig.json text
+tailwind.config.js text
+next.config.js text
+postcss.config.js text
+
+# Treat as binary (to prevent git from trying to diff them)
+*.sqlite binary
+*.db binary

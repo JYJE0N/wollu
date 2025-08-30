@@ -1,0 +1,181 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 테마별 CSS 변수 */
+:root {
+  /* Light Theme */
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-surface: #f8fafc;
+  --color-interactive-primary: #3b82f6;
+  --color-interactive-primary-hover: #2563eb;
+  
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #64748b;
+  
+  --color-feedback-success: #10b981;
+  --color-feedback-error: #ef4444;
+  --color-feedback-warning: #f59e0b;
+  
+  /* 타자연습 특화 색상 */
+  --typing-correct: #10b981;
+  --typing-incorrect: #ef4444;
+  --typing-current: #3b82f6;
+  --typing-pending: #94a3b8;
+}
+
+.dark {
+  /* Dark Theme */
+  --color-background: #0f172a;
+  --color-foreground: #f8fafc;
+  --color-surface: #1e293b;
+  --color-interactive-primary: #60a5fa;
+  --color-interactive-primary-hover: #3b82f6;
+  
+  --color-text-primary: #f8fafc;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  
+  --color-feedback-success: #34d399;
+  --color-feedback-error: #f87171;
+  --color-feedback-warning: #fbbf24;
+  
+  /* 타자연습 특화 색상 (Dark) */
+  --typing-correct: #34d399;
+  --typing-incorrect: #f87171;
+  --typing-current: #60a5fa;
+  --typing-pending: #64748b;
+}
+
+.neon {
+  /* Neon Theme */
+  --color-background: #0a0a0a;
+  --color-foreground: #00ff88;
+  --color-surface: #1a1a1a;
+  --color-interactive-primary: #00ff88;
+  --color-interactive-primary-hover: #00cc66;
+  
+  --color-text-primary: #00ff88;
+  --color-text-secondary: #88ffcc;
+  --color-text-muted: #44aa66;
+  
+  --color-feedback-success: #00ff88;
+  --color-feedback-error: #ff0088;
+  --color-feedback-warning: #ffaa00;
+  
+  /* 타자연습 특화 색상 (Neon) */
+  --typing-correct: #00ff88;
+  --typing-incorrect: #ff0088;
+  --typing-current: #88ffcc;
+  --typing-pending: #444444;
+}
+
+/* 기본 스타일 */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: 'Pretendard', system-ui, sans-serif;
+}
+
+/* 타자연습 특화 컴포넌트 */
+.typing-text {
+  @apply font-mono text-typing leading-relaxed tracking-wide;
+  letter-spacing: 0.05em;
+}
+
+.typing-char {
+  @apply relative inline-block;
+  transition: all 0.1s ease;
+}
+
+.typing-char.correct {
+  @apply text-typing-correct;
+  background-color: rgba(16, 185, 129, 0.1);
+}
+
+.typing-char.incorrect {
+  @apply text-typing-incorrect;
+  background-color: rgba(239, 68, 68, 0.15);
+}
+
+.typing-char.current {
+  @apply text-typing-current;
+  background-color: rgba(59, 130, 246, 0.2);
+  animation: cursor-blink 1s infinite;
+}
+
+.typing-char.pending {
+  @apply text-typing-pending;
+}
+
+/* 입력 필드 스타일 */
+.typing-input {
+  @apply w-full px-4 py-3 text-typing font-mono;
+  @apply bg-surface border-2 border-gray-200 rounded-lg;
+  @apply focus:border-primary focus:outline-none;
+  @apply transition-colors duration-200;
+}
+
+.dark .typing-input {
+  @apply border-gray-600 focus:border-primary;
+}
+
+/* 통계 패널 */
+.stats-panel {
+  @apply bg-surface p-6 rounded-xl shadow-lg;
+  @apply border border-gray-200;
+}
+
+.dark .stats-panel {
+  @apply border-gray-700;
+}
+
+/* 프로그레스 바 */
+.progress-bar {
+  @apply relative overflow-hidden bg-gray-200 rounded-full h-2;
+}
+
+.dark .progress-bar {
+  @apply bg-gray-700;
+}
+
+.progress-fill {
+  @apply h-full bg-primary rounded-full transition-all duration-300 ease-out;
+}
+
+/* 반응형 타이포그래피 */
+@media (max-width: 640px) {
+  .typing-text {
+    @apply text-base;
+  }
+}
+
+@media (min-width: 1024px) {
+  .typing-text {
+    @apply text-typing-lg;
+  }
+}
+
+/* 접근성 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 한글 폰트 최적화 */
+@font-face {
+  font-family: 'Pretendard';
+  src: url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+  font-display: swap;
+}
