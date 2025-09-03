@@ -3,10 +3,15 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
-    "build": "next build --turbopack",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "cross-env NODE_ENV=development next dev --turbopack",
+    "build": "cross-env NODE_ENV=production next build --turbopack",
+    "start": "cross-env NODE_ENV=production next start",
+    "lint": "cross-env NODE_ENV=development eslint",
+    "lint:fix": "cross-env NODE_ENV=development eslint --fix",
+    "type-check": "cross-env NODE_ENV=development tsc --noEmit",
+    "clean": "cross-env rimraf .next out dist",
+    "dev:debug": "cross-env NODE_ENV=development DEBUG=* next dev --turbopack",
+    "build:analyze": "cross-env ANALYZE=true NODE_ENV=production next build --turbopack"
   },
   "dependencies": {
     "framer-motion": "^12.23.12",
@@ -24,8 +29,10 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",
+    "rimraf": "^6.0.1",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

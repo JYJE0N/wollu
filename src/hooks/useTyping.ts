@@ -111,7 +111,7 @@ export function useTyping(text: string) {
 
       let newUserInput = prev.userInput;
       let newCurrentIndex = prev.currentIndex;
-      let newErrors = [...prev.errors];
+      const newErrors = [...prev.errors];
 
       if (key === 'Backspace') {
         if (newUserInput.length > 0) {

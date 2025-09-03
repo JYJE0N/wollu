@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { Trophy, Target, Clock, Zap, RotateCcw } from 'lucide-react';
 
@@ -37,7 +36,7 @@ export default function KoreanIMETyping({ text, onComplete }: KoreanIMETypingPro
   const inputRef = useRef<HTMLInputElement>(null);
 
   // IME 조합 시작
-  const handleCompositionStart = (e: React.CompositionEvent<HTMLInputElement>) => {
+  const handleCompositionStart = () => {
     setIsComposing(true);
     
     // 첫 입력 시 타이머 시작
@@ -288,7 +287,7 @@ export default function KoreanIMETyping({ text, onComplete }: KoreanIMETypingPro
           spellCheck={false}
         />
         <div className="text-xs text-gray-500 mt-2">
-          조합 중: {isComposing ? '예' : '아니오'} | 조합 텍스트: "{compositionText}" | 현재 위치: {currentPosition}/{text.length} | 입력 길이: {userInput.length}
+          조합 중: {isComposing ? '예' : '아니오'} | 조합 텍스트: &quot;{compositionText}&quot; | 현재 위치: {currentPosition}/{text.length} | 입력 길이: {userInput.length}
         </div>
       </div>
 

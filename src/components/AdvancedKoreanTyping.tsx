@@ -185,7 +185,7 @@ export default function AdvancedKoreanTyping({ text, onComplete }: AdvancedKorea
       } else {
         // 한글 문자는 자소 단위로 지움
         const composition = currentChar.currentComposition;
-        let newComposition = { ...composition };
+        const newComposition = { ...composition };
         
         if (composition.final) {
           newComposition.final = '';

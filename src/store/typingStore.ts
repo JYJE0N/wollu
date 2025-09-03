@@ -86,7 +86,7 @@ export const useTypingStore = create<TypingState>()(
 
           let newUserInput = state.userInput;
           let newCurrentIndex = state.currentIndex;
-          let newErrors = [...state.errors];
+          const newErrors = [...state.errors];
           let newStartTime = state.startTime;
           let newIsStarted = state.isStarted;
 

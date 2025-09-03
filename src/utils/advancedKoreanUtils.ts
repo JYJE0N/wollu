@@ -102,7 +102,7 @@ export function updateComposition(current: KoreanComposition, input: string): Ko
     return current;
   }
   
-  let newComposition = { ...current };
+  const newComposition = { ...current };
   
   if (isConsonant) {
     if (!current.initial) {

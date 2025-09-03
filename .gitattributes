@@ -1,0 +1,61 @@
+# 모든 텍스트 파일에 대해 줄바꿈 자동 변환 설정
+* text=auto
+
+# 특정 파일 확장자별 줄바꿈 설정
+*.js text eol=lf
+*.jsx text eol=lf  
+*.ts text eol=lf
+*.tsx text eol=lf
+*.json text eol=lf
+*.md text eol=lf
+*.yml text eol=lf
+*.yaml text eol=lf
+*.css text eol=lf
+*.scss text eol=lf
+*.html text eol=lf
+*.xml text eol=lf
+
+# 설정 파일들
+.gitignore text eol=lf
+.gitattributes text eol=lf
+.eslintrc* text eol=lf
+.prettierrc* text eol=lf
+package.json text eol=lf
+package-lock.json text eol=lf
+yarn.lock text eol=lf
+tsconfig.json text eol=lf
+next.config.* text eol=lf
+tailwind.config.* text eol=lf
+postcss.config.* text eol=lf
+
+# 바이너리 파일 - 줄바꿈 변환하지 않음
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.svg binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+*.zip binary
+*.tar.gz binary
+
+# 윈도우 배치 파일은 CRLF 유지
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 쉘 스크립트는 LF 유지  
+*.sh text eol=lf
+
+# 도커 파일
+Dockerfile text eol=lf
+*.dockerfile text eol=lf
+
+# 문서 파일
+README* text eol=lf
+LICENSE text eol=lf
+CHANGELOG* text eol=lf
+CONTRIBUTING* text eol=lf
