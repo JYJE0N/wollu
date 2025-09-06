@@ -37,6 +37,27 @@ export const wordExamples = {
 
 // 유틸리티 함수들
 export class ExamplePool {
+  // 사용된 문장들을 추적하는 Set (언어별, 난이도별)
+  private static usedSentences: Map<string, Set<string>> = new Map();
+  
+  /**
+   * 사용된 문장 키 생성
+   */
+  private static getUsedKey(language: Language, difficulty: 'easy' | 'medium' | 'hard'): string {
+    return `${language}-${difficulty}`;
+  }
+  
+  /**
+   * 사용된 문장 초기화
+   */
+  static resetUsedSentences(language?: Language, difficulty?: 'easy' | 'medium' | 'hard'): void {
+    if (language && difficulty) {
+      const key = this.getUsedKey(language, difficulty);
+      this.usedSentences.delete(key);
+    } else {
+      this.usedSentences.clear();
+    }
+  }
   /**
    * 난이도별 문장 가져오기
    */
@@ -48,15 +69,38 @@ export class ExamplePool {
   }
 
   /**
-   * 랜덤 문장 가져오기
+   * 랜덤 문장 가져오기 (중복 방지)
    */
   static getRandomSentence(
     language: Language,
     difficulty: 'easy' | 'medium' | 'hard'
   ): string {
     const sentences = this.getSentencesByDifficulty(language, difficulty);
-    const randomIndex = Math.floor(Math.random() * sentences.length);
-    return sentences[randomIndex];
+    const key = this.getUsedKey(language, difficulty);
+    
+    // 해당 카테고리의 사용된 문장 Set 가져오기 또는 생성
+    if (!this.usedSentences.has(key)) {
+      this.usedSentences.set(key, new Set());
+    }
+    const usedSet = this.usedSentences.get(key)!;
+    
+    // 아직 사용하지 않은 문장들 필터링
+    const availableSentences = sentences.filter(sentence => !usedSet.has(sentence));
+    
+    // 모든 문장을 사용했다면 사용 기록 초기화
+    if (availableSentences.length === 0) {
+      usedSet.clear();
+      return this.getRandomSentence(language, difficulty); // 재귀 호출
+    }
+    
+    // 사용 가능한 문장 중 랜덤 선택
+    const randomIndex = Math.floor(Math.random() * availableSentences.length);
+    const selectedSentence = availableSentences[randomIndex];
+    
+    // 선택된 문장을 사용된 목록에 추가
+    usedSet.add(selectedSentence);
+    
+    return selectedSentence;
   }
 
   /**
@@ -91,7 +135,7 @@ export class ExamplePool {
   }
 
   /**
-   * 문장 통계 정보
+   * 문장 통계 정보 (사용 현황 포함)
    */
   static getSentenceStats(language: Language) {
     const stats = {
@@ -100,9 +144,23 @@ export class ExamplePool {
       hard: sentenceExamples[language].hard.length,
     };
     
+    // 사용된 문장 수 계산
+    const usedStats = {
+      easy: this.usedSentences.get(this.getUsedKey(language, 'easy'))?.size || 0,
+      medium: this.usedSentences.get(this.getUsedKey(language, 'medium'))?.size || 0,
+      hard: this.usedSentences.get(this.getUsedKey(language, 'hard'))?.size || 0,
+    };
+    
     return {
-      ...stats,
-      total: stats.easy + stats.medium + stats.hard,
+      total: stats,
+      used: usedStats,
+      available: {
+        easy: stats.easy - usedStats.easy,
+        medium: stats.medium - usedStats.medium,
+        hard: stats.hard - usedStats.hard,
+      },
+      totalCount: stats.easy + stats.medium + stats.hard,
+      totalUsed: usedStats.easy + usedStats.medium + usedStats.hard,
     };
   }
 

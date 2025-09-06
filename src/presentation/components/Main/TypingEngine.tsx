@@ -193,16 +193,18 @@ export const TypingEngine = React.forwardRef<
     }
   };
 
-  // 하단 레이어: 전체 예제 텍스트 (조합 중인 글자는 숨김)
+  // 하단 레이어: 전체 예제 텍스트 (타이핑된 부분만 숨김)
   const renderBaseText = () => {
     // 실제 확정된 글자 수 계산 (조합 중일 때는 마지막 글자 제외)
     const confirmedLength = isComposing && composingChar ? userInput.length - 1 : userInput.length;
+    // 하지만 타겟 텍스트보다 길어질 수는 없음
+    const safeConfirmedLength = Math.min(confirmedLength, targetText.length);
     
     return targetText.split('').map((char, index) => {
       // 확정된 부분은 숨김 (상단 레이어에서 처리)
-      const isConfirmedPosition = index < confirmedLength;
+      const isConfirmedPosition = index < safeConfirmedLength;
       // 조합 중일 때 해당 위치의 글자를 투명하게 처리
-      const isComposingPosition = isComposing && composingChar && index === confirmedLength;
+      const isComposingPosition = isComposing && composingChar && index === safeConfirmedLength && index < targetText.length;
       
       return (
         <span 
@@ -221,8 +223,10 @@ export const TypingEngine = React.forwardRef<
     
     // IME 조합 중일 때는 마지막 글자를 제외하고 렌더링
     const renderLength = isComposing && composingChar ? userInput.length - 1 : userInput.length;
+    // 타겟 텍스트보다 길어질 수는 없음
+    const safeRenderLength = Math.min(renderLength, targetText.length);
     
-    for (let i = 0; i < renderLength; i++) {
+    for (let i = 0; i < safeRenderLength; i++) {
       const char = userInput[i];
       const targetChar = targetText[i];
       let className = 'relative transition-colors duration-200';
@@ -243,7 +247,7 @@ export const TypingEngine = React.forwardRef<
     }
     
     // 현재 IME 조합 중인 글자 (한글) - 제자리에 배치
-    if (currentLanguage === 'ko' && isComposing && composingChar) {
+    if (currentLanguage === 'ko' && isComposing && composingChar && safeRenderLength < targetText.length) {
       typedChars.push(
         <span 
           key="composing" 
@@ -305,6 +309,7 @@ export const TypingEngine = React.forwardRef<
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // 완료 조건: 길이와 내용이 모두 정확해야 함
   const isCompleted = userInput.length >= targetText.length && userInput === targetText;
 
   // Timer and WPM calculation - critical for accuracy
