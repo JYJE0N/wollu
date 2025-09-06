@@ -7,6 +7,7 @@ import { TypingSessionService } from '@/application/services/TypingSessionServic
 
 class DIContainer {
   private static instance: DIContainer;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private services: Map<string, any> = new Map();
 
   private constructor() {

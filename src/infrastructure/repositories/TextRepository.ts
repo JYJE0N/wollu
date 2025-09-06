@@ -1,5 +1,6 @@
 import { ITextRepository } from '@/domain/repositories/ITextRepository';
-import { Language, getLanguageData } from '@/data/languages';
+import { Language } from '@/data/languages';
+import ExamplePool from '@/data/examples';
 
 export class TextRepository implements ITextRepository {
   private currentLanguage: Language = 'ko';
@@ -8,43 +9,22 @@ export class TextRepository implements ITextRepository {
     this.currentLanguage = language;
   }
 
-  private getCurrentLanguageData() {
-    return getLanguageData(this.currentLanguage);
-  }
-
   getRandomSentence(): string {
-    const languageData = this.getCurrentLanguageData();
-    const allSentences = [
-      ...languageData.sentences.easy,
-      ...languageData.sentences.medium,
-      ...languageData.sentences.hard
-    ];
-    return allSentences[Math.floor(Math.random() * allSentences.length)];
+    // 랜덤 난이도 선택
+    const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
+    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
+    return ExamplePool.getRandomSentence(this.currentLanguage, randomDifficulty);
   }
 
   getRandomWords(count: number): string {
-    const languageData = this.getCurrentLanguageData();
-    const allWords = [
-      ...languageData.words.common,
-      ...languageData.words.tech,
-      ...languageData.words.business
-    ];
-    
-    const selected: string[] = [];
-    for (let i = 0; i < count; i++) {
-      selected.push(allWords[Math.floor(Math.random() * allWords.length)]);
-    }
-    
-    return selected.join(' ');
+    return ExamplePool.getRandomWords(this.currentLanguage, count);
   }
 
   getSentencesByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): string[] {
-    const languageData = this.getCurrentLanguageData();
-    return languageData.sentences[difficulty];
+    return ExamplePool.getSentencesByDifficulty(this.currentLanguage, difficulty);
   }
 
   getWordsByCategory(category: string): string[] {
-    const languageData = this.getCurrentLanguageData();
-    return languageData.words[category as keyof typeof languageData.words] || [];
+    return ExamplePool.getWordsByCategory(this.currentLanguage, category, 50).split(' ');
   }
 }
