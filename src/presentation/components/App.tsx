@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
-import { BookOpen, Shuffle, Settings, Globe } from 'lucide-react';
+import { BookOpen, Shuffle, Settings, Globe, ChevronDown, X } from 'lucide-react';
 import { ToastProvider } from '@/components/ToastProvider';
 import { TypingPracticeView } from './TypingPracticeView';
 import { getTextRepository } from '@/infrastructure/di/DIContainer';
@@ -15,9 +15,11 @@ export default function App() {
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [currentLanguage, setCurrentLanguage] = useState<Language>('ko');
   const [isInitialized, setIsInitialized] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   
   const textRepository = getTextRepository();
   const availableLanguages = getAllLanguages();
+  const settingsRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     textRepository.setLanguage(currentLanguage);
@@ -27,6 +29,22 @@ export default function App() {
     setCurrentText(initialText);
     setIsInitialized(true);
   }, [currentLanguage]);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (settingsRef.current && !settingsRef.current.contains(event.target as Node)) {
+        setIsSettingsOpen(false);
+      }
+    }
+
+    if (isSettingsOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSettingsOpen]);
 
   const handleNewText = (showToast: boolean = true) => {
     const newText = practiceMode === 'sentence' 
@@ -106,7 +124,7 @@ export default function App() {
                 {currentLanguage === 'ko' ? '한글 타자연습' : 'Typing Practice'}
               </motion.h1>
               <div className="flex-1 flex justify-end">
-                <motion.div className="flex space-x-2">
+                <motion.div className="flex space-x-2 items-center">
                   {availableLanguages.map((lang) => (
                     <button
                       key={lang.code}
@@ -121,69 +139,107 @@ export default function App() {
                       {lang.name}
                     </button>
                   ))}
+                  
+                  <div className="relative" ref={settingsRef}>
+                    <motion.button
+                      onClick={() => setIsSettingsOpen(!isSettingsOpen)}
+                      className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 transition-all"
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Settings className="w-5 h-5 text-gray-700" />
+                    </motion.button>
+                    
+                    {isSettingsOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        className="absolute right-0 top-12 bg-white rounded-lg shadow-lg border p-4 min-w-64 z-10"
+                      >
+                        <div className="flex justify-between items-center mb-3">
+                          <h3 className="font-semibold text-gray-800">
+                            {currentLanguage === 'ko' ? '설정' : 'Settings'}
+                          </h3>
+                          <button 
+                            onClick={() => setIsSettingsOpen(false)}
+                            className="p-1 rounded hover:bg-gray-100"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+                        <div className="space-y-3">
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                              {currentLanguage === 'ko' ? '연습 모드' : 'Practice Mode'}
+                            </label>
+                            <div className="space-y-2">
+                              <button
+                                onClick={() => {
+                                  handleModeChange('sentence');
+                                  setIsSettingsOpen(false);
+                                }}
+                                className={`w-full flex items-center px-3 py-2 rounded-md text-left transition-all ${
+                                  practiceMode === 'sentence'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                              >
+                                <BookOpen className="w-4 h-4 mr-2" />
+                                {currentLanguage === 'ko' ? '문장 연습' : 'Sentence Practice'}
+                              </button>
+                              <button
+                                onClick={() => {
+                                  handleModeChange('words');
+                                  setIsSettingsOpen(false);
+                                }}
+                                className={`w-full flex items-center px-3 py-2 rounded-md text-left transition-all ${
+                                  practiceMode === 'words'
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-100 hover:bg-gray-200'
+                                }`}
+                              >
+                                <Settings className="w-4 h-4 mr-2" />
+                                {currentLanguage === 'ko' ? '단어 연습' : 'Word Practice'}
+                              </button>
+                            </div>
+                          </div>
+
+                          {practiceMode === 'sentence' && (
+                            <div>
+                              <label className="block text-sm font-medium text-gray-700 mb-2">
+                                {currentLanguage === 'ko' ? '난이도' : 'Difficulty'}
+                              </label>
+                              <div className="space-y-1">
+                                {(['easy', 'medium', 'hard'] as const).map((level) => (
+                                  <button
+                                    key={level}
+                                    onClick={() => {
+                                      handleDifficultyChange(level);
+                                    }}
+                                    className={`w-full px-3 py-1 rounded-md text-left transition-all text-sm ${
+                                      difficulty === level
+                                        ? 'bg-purple-600 text-white'
+                                        : 'bg-gray-100 hover:bg-gray-200'
+                                    }`}
+                                  >
+                                    {currentLanguage === 'ko' 
+                                      ? (level === 'easy' ? '쉬움' : level === 'medium' ? '보통' : '어려움')
+                                      : (level === 'easy' ? 'Easy' : level === 'medium' ? 'Medium' : 'Hard')
+                                    }
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </div>
                 </motion.div>
               </div>
             </motion.div>
             
-            <motion.div 
-              className="flex justify-center space-x-4 mb-4"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <motion.button
-                onClick={() => handleModeChange('sentence')}
-                className={`flex items-center px-6 py-3 rounded-lg transition-all shadow-md ${
-                  practiceMode === 'sentence'
-                    ? 'bg-blue-600 text-white scale-105'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <BookOpen className="w-5 h-5 mr-2" />
-                {currentLanguage === 'ko' ? '문장 연습' : 'Sentence Practice'}
-              </motion.button>
-              <motion.button
-                onClick={() => handleModeChange('words')}
-                className={`flex items-center px-6 py-3 rounded-lg transition-all shadow-md ${
-                  practiceMode === 'words'
-                    ? 'bg-blue-600 text-white scale-105'
-                    : 'bg-white text-gray-700 hover:bg-gray-50 hover:scale-105'
-                }`}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <Settings className="w-5 h-5 mr-2" />
-                {currentLanguage === 'ko' ? '단어 연습' : 'Word Practice'}
-              </motion.button>
-            </motion.div>
-
-            {practiceMode === 'sentence' && (
-              <motion.div 
-                className="flex justify-center space-x-2 mb-4"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5 }}
-              >
-                {(['easy', 'medium', 'hard'] as const).map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => handleDifficultyChange(level)}
-                    className={`px-4 py-2 rounded-md transition-all ${
-                      difficulty === level
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                    }`}
-                  >
-                    {currentLanguage === 'ko' 
-                      ? (level === 'easy' ? '쉬움' : level === 'medium' ? '보통' : '어려움')
-                      : (level === 'easy' ? 'Easy' : level === 'medium' ? 'Medium' : 'Hard')
-                    }
-                  </button>
-                ))}
-              </motion.div>
-            )}
             
             <motion.div 
               className="text-center"
