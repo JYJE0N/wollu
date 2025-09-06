@@ -12,6 +12,7 @@ interface QuickActionsProps {
   onPracticeModeChange: (mode: 'sentence' | 'words') => void;
   onDifficultyChange: (difficulty: 'easy' | 'medium' | 'hard') => void;
   isTypingActive: boolean;
+  onStartTyping?: () => void;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
@@ -21,6 +22,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
   onPracticeModeChange,
   onDifficultyChange,
   isTypingActive,
+  onStartTyping,
 }) => {
   const getDifficultyColor = (level: 'easy' | 'medium' | 'hard') => {
     switch (level) {
@@ -103,12 +105,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 
         <div className="flex items-center space-x-3">
           <motion.button
+            onClick={() => onStartTyping?.()}
             whileHover={!isTypingActive ? { scale: 1.05 } : {}}
             whileTap={!isTypingActive ? { scale: 0.95 } : {}}
             disabled={isTypingActive}
             className={`flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-lg shadow-lg transition-all ${
               isTypingActive ? 'opacity-50 cursor-not-allowed' : ''
             }`}
+            title={currentLanguage === 'ko' ? '숏컷: Shift+Enter' : 'Shortcut: Shift+Enter'}
           >
             <Shuffle className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -117,12 +121,14 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
           </motion.button>
 
           <motion.button
+            onClick={() => onStartTyping?.()}
             whileHover={!isTypingActive ? { scale: 1.05 } : {}}
             whileTap={!isTypingActive ? { scale: 0.95 } : {}}
             disabled={isTypingActive}
             className={`flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm transition-all ${
               isTypingActive ? 'opacity-50 cursor-not-allowed' : ''
             }`}
+            title={currentLanguage === 'ko' ? '숏컷: Shift+Enter' : 'Shortcut: Shift+Enter'}
           >
             <RotateCcw className="w-4 h-4" />
             <span className="text-sm font-medium">

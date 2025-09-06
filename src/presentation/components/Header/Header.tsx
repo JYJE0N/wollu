@@ -60,12 +60,38 @@ export const Header: React.FC<HeaderProps> = ({
               </h1>
             </div>
 
-            <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="hidden lg:flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400">
               <Keyboard className="w-4 h-4" />
-              <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded">
-                Shift + Enter
-              </span>
-              <span>시작</span>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Shift+Enter
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '시작' : 'Start'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Esc
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '일시정지' : 'Pause'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Ctrl+Shift+R
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '다시시작' : 'Restart'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Esc×2
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '초기화' : 'Reset'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Space
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '재개' : 'Resume'}</span>
+              </div>
             </div>
           </div>
 
