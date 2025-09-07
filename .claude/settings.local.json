@@ -9,7 +9,8 @@
       "Bash(npm run lint)",
       "Bash(timeout 10s npm run dev)",
       "Read(//Users/roseline/Desktop/01_스크린샷/**)",
-      "WebFetch(domain:typing.works)"
+      "WebFetch(domain:typing.works)",
+      "WebFetch(domain:monkeytype.com)"
     ],
     "deny": [],
     "ask": []

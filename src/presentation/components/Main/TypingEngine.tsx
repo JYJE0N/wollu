@@ -99,6 +99,10 @@ export const TypingEngine = React.forwardRef<
     let correct = 0;
     let errors = 0;
     for (let i = 0; i < userInput.length; i++) {
+      // 조합 중인 마지막 글자는 정확도 계산에서 제외
+      if (isComposing && i === userInput.length - 1) {
+        continue;
+      }
       if (i < targetText.length && userInput[i] === targetText[i]) {
         correct++;
       } else {
@@ -106,7 +110,7 @@ export const TypingEngine = React.forwardRef<
       }
     }
     return { correct, errors };
-  }, [userInput, targetText]);
+  }, [userInput, targetText, isComposing]);
 
   useEffect(() => {
     const { correct, errors } = calculateCorrectChars();
@@ -209,11 +213,11 @@ export const TypingEngine = React.forwardRef<
     }
   };
 
-  // 오류 상태를 추적하기 위한 errors 객체 생성 (조합 중인 현재 위치 제외)
+  // 오류 상태를 추적하기 위한 errors 객체 생성
   const errors = useCallback(() => {
     const errorMap: Record<number, boolean> = {};
     for (let i = 0; i < userInput.length; i++) {
-      // 조합 중인 현재 위치는 오류 판정에서 제외
+      // 조합 중인 마지막 글자는 오타 판정에서 제외
       if (isComposing && i === userInput.length - 1) {
         continue;
       }
