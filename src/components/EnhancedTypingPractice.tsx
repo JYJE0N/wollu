@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { Trophy, Target, Clock, Zap, RotateCcw } from 'lucide-react';
 import { useTypingStore } from '@/store/typingStore';
+import TextRenderer from '@/presentation/components/Common/TextRenderer';
 import { 
   isKorean, 
   getKoreanTypingProgress, 
@@ -96,48 +97,6 @@ export default function EnhancedTypingPractice({ text, onComplete }: EnhancedTyp
     }
   }, []);
 
-  const renderText = () => {
-    return text.split('').map((char, index) => {
-      let className = 'text-2xl transition-all duration-200 ';
-      let bgColor = '';
-      
-      if (index < currentIndex) {
-        if (errors[index]) {
-          className += 'text-red-700';
-          bgColor = 'bg-red-200';
-        } else {
-          className += 'text-green-700';
-          bgColor = 'bg-green-200';
-        }
-      } else if (index === currentIndex) {
-        className += 'text-blue-700';
-        bgColor = 'bg-blue-200';
-      } else {
-        className += 'text-gray-600';
-      }
-
-      return (
-        <motion.span
-          key={index}
-          className={`${className} ${bgColor} rounded px-1`}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ 
-            opacity: 1, 
-            y: 0,
-            scale: index === currentIndex ? 1.1 : 1
-          }}
-          transition={{ 
-            delay: index * 0.02,
-            type: "spring",
-            stiffness: 500,
-            damping: 25
-          }}
-        >
-          {char}
-        </motion.span>
-      );
-    });
-  };
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -272,7 +231,16 @@ export default function EnhancedTypingPractice({ text, onComplete }: EnhancedTyp
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          {renderText()}
+          <TextRenderer
+            text={text}
+            userInput={userInput}
+            currentIndex={currentIndex}
+            errors={errors}
+            language="ko"
+            showCursor={!isCompleted}
+            highlightCurrent={!isCompleted}
+            showSpaces={true}
+          />
         </motion.div>
       </motion.div>
 

@@ -4,6 +4,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { Trophy, Target, Clock, Zap, RotateCcw } from 'lucide-react';
+import TextRenderer from '@/presentation/components/Common/TextRenderer';
 
 interface SimpleTypingPracticeProps {
   text: string;
@@ -95,31 +96,13 @@ export default function SimpleTypingPractice({ text, onComplete }: SimpleTypingP
     }
   }, [userInput, text, onComplete]);
 
-  // 텍스트 렌더링
-  const renderText = () => {
-    return text.split('').map((char, index) => {
-      let className = 'text-2xl px-1 py-0.5 rounded ';
-      
-      if (index < userInput.length) {
-        // 입력된 문자
-        className += userInput[index] === char 
-          ? 'bg-green-200 text-green-700' 
-          : 'bg-red-200 text-red-700';
-      } else if (index === userInput.length) {
-        // 현재 위치
-        className += 'bg-blue-200 text-blue-700 animate-pulse';
-      } else {
-        // 아직 입력하지 않은 문자
-        className += 'text-gray-500';
-      }
-
-      return (
-        <span key={index} className={className}>
-          {char === ' ' ? '␣' : char}
-        </span>
-      );
-    });
-  };
+  // 오류 맵 생성
+  const errors: Record<number, boolean> = {};
+  for (let i = 0; i < userInput.length; i++) {
+    if (i < text.length && userInput[i] !== text[i]) {
+      errors[i] = true;
+    }
+  }
 
   const handleReset = () => {
     setUserInput('');
@@ -203,7 +186,16 @@ export default function SimpleTypingPractice({ text, onComplete }: SimpleTypingP
         onClick={() => inputRef.current?.focus()}
       >
         <div className="leading-relaxed text-center">
-          {renderText()}
+          <TextRenderer
+            text={text}
+            userInput={userInput}
+            currentIndex={userInput.length}
+            errors={errors}
+            language="ko"
+            showCursor={!isCompleted}
+            highlightCurrent={!isCompleted}
+            showSpaces={true}
+          />
         </div>
       </div>
 
