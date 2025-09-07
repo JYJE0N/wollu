@@ -78,6 +78,11 @@ export class ExamplePool {
     const sentences = this.getSentencesByDifficulty(language, difficulty);
     const key = this.getUsedKey(language, difficulty);
     
+    // 타이핑 연습에 적합한 문장들만 필터링
+    const typingFriendlySentences = sentences.filter(sentence => 
+      this.isTypingFriendly(sentence)
+    );
+    
     // 해당 카테고리의 사용된 문장 Set 가져오기 또는 생성
     if (!this.usedSentences.has(key)) {
       this.usedSentences.set(key, new Set());
@@ -85,7 +90,7 @@ export class ExamplePool {
     const usedSet = this.usedSentences.get(key)!;
     
     // 아직 사용하지 않은 문장들 필터링
-    const availableSentences = sentences.filter(sentence => !usedSet.has(sentence));
+    const availableSentences = typingFriendlySentences.filter(sentence => !usedSet.has(sentence));
     
     // 모든 문장을 사용했다면 사용 기록 초기화
     if (availableSentences.length === 0) {
@@ -183,6 +188,142 @@ export class ExamplePool {
       totalCategories: categories.length,
       totalWords: total,
     };
+  }
+
+  /**
+   * 타입과 variant에 따른 문장 가져오기 (세팅패널용)
+   */
+  static getSentenceByTypeAndVariant(
+    language: Language,
+    type: 'short' | 'medium' | 'long',
+    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
+  ): string {
+    // 타입을 난이도로 매핑
+    const difficultyMap = {
+      'short': 'easy' as const,
+      'medium': 'medium' as const, 
+      'long': 'hard' as const
+    };
+    
+    const difficulty = difficultyMap[type];
+    const sentences = this.getSentencesByDifficulty(language, difficulty);
+    
+    // variant에 따른 필터링
+    const filteredSentences = this.filterSentencesByVariant(sentences, variant);
+    
+    // 필터링된 문장이 없으면 전체에서 랜덤 선택
+    if (filteredSentences.length === 0) {
+      return this.getRandomSentence(language, difficulty);
+    }
+    
+    // 필터링된 문장에서 랜덤 선택
+    const randomIndex = Math.floor(Math.random() * filteredSentences.length);
+    return filteredSentences[randomIndex];
+  }
+  
+  /**
+   * variant에 따른 문장 필터링
+   */
+  private static filterSentencesByVariant(
+    sentences: string[],
+    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
+  ): string[] {
+    // 먼저 타이핑 연습에 적합한 문장들만 필터링
+    const typingFriendlySentences = sentences.filter(sentence => 
+      this.isTypingFriendly(sentence)
+    );
+    
+    switch (variant) {
+      case 'basic':
+        // 구두점과 숫자가 없는 기본 문장만
+        return typingFriendlySentences.filter(sentence => 
+          !this.hasPunctuation(sentence) && !this.hasNumbers(sentence)
+        );
+      
+      case 'punctuation':
+        // 구두점이 포함된 문장만
+        return typingFriendlySentences.filter(sentence => 
+          this.hasPunctuation(sentence) && !this.hasNumbers(sentence)
+        );
+      
+      case 'numbers':
+        // 숫자가 포함된 문장만
+        return typingFriendlySentences.filter(sentence => 
+          this.hasNumbers(sentence) && !this.hasPunctuation(sentence)
+        );
+      
+      case 'mixed':
+        // 구두점과 숫자가 모두 포함된 문장만
+        return typingFriendlySentences.filter(sentence => 
+          this.hasPunctuation(sentence) && this.hasNumbers(sentence)
+        );
+      
+      default:
+        return typingFriendlySentences;
+    }
+  }
+  
+  /**
+   * 구두점 포함 여부 검사
+   */
+  private static hasPunctuation(text: string): boolean {
+    // 한글 구두점: . , ! ? : ; " ' ( ) [ ] { } - / 등
+    // 영문 구두점도 포함
+    const punctuationRegex = /[.,!?:;"'()\[\]{}\-\/~`@#$%^&*+=<>|\\]/;
+    return punctuationRegex.test(text);
+  }
+  
+  /**
+   * 숫자 포함 여부 검사
+   */
+  private static hasNumbers(text: string): boolean {
+    const numberRegex = /\d/;
+    return numberRegex.test(text);
+  }
+  
+  /**
+   * 키보드에 없는 특수기호 필터링
+   */
+  private static filterSpecialCharacters(text: string): string {
+    // 키보드에 없는 특수기호들 제거
+    // 수학 기호: ¶〖〗⎡⎛⎜⎝⎞⎟⎠⎤⎥⎦⎧⎨⎩⎪⎫⎬⎭ 등
+    // 원문자: ①②③④⑤⑥⑦⑧⑨⑩ 등
+    // 특수 인용부호: 『』「」｢｣〈〉《》【】〔〕〘〙〚〛 등
+    // 기타 특수문자: ★☆♪♫♬♭♯♮…‥※‡†§ 등
+    const specialCharsRegex = /[¶〖〗⎡⎛⎜⎝⎞⎟⎠⎤⎥⎦⎧⎨⎩⎪⎫⎬⎭⎮⎯⎰⎱⎲⎳⎴⎵⎶⎷⎸⎹⎺⎻⎼⎽⎾⎿⏀⏁⏂⏃⏄⏅⏆⏇⏈⏉⏊⏋⏌⏍⏎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙⏚⏛⏜⏝⏞⏟⏠⏡⏢⏣⏤⏥⏦⏧⏨⏩⏪⏫⏬⏭⏮⏯⏰⏱⏲⏳⏴⏵⏶⏷⏸⏹⏺⏻⏼⏽⏾⏿①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉠㉡㉢㉣㉤㉥㉦㉧㉨㉩㉪㉫㉬㉭㉮㉯㉰㉱㉲㉳㉴㉵㉶㉷㉸㉹㉺㉻★☆♪♫♬♭♯♮…‥※‡†§『』「」｢｣〈〉《》【】〔〕〘〙〚〛∀∃∄∅∆∇∈∉∊∋∌∍∎∏∐∑−∓∔∕∖∗∘∙√∛∜∝∞∟∠∡∢∣∤∥∦∧∨∩∪∫∬∭∮∯∰∱∲∳∴∵∶∷∸∹∺∻∼∽∾∿≀≁≂≃≄≅≆≇≈≉≊≋≌≍≎≏≐≑≒≓≔≕≖≗≘≙≚≛≜≝≞≟≠≡≢≣≤≥≦≧≨≩⊀⊁⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊌⊍⊎⊏⊐⊑⊒⊓⊔⊕⊖⊗⊘⊙⊚⊛⊜⊝⊞⊟⊠⊡⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊬⊭⊮⊯⊰⊱⊲⊳⊴⊵⊶⊷⊸⊹⊺⊻⊼⊽⊾⊿⋀⋁⋂⋃⋄⋅⋆⋇⋈⋉⋊⋋⋌⋍⋎⋏⋐⋑⋒⋓⋔⋕⋖⋗⋘⋙⋚⋛⋜⋝⋞⋟⋠⋡⋢⋣⋤⋥⋦⋧⋨⋩⋪⋫⋬⋭⋮⋯⋰⋱⋲⋳⋴⋵⋶⋷⋸⋹⋺⋻⋼⋽⋾⋿]/g;
+    
+    return text.replace(specialCharsRegex, '');
+  }
+  
+  /**
+   * 타이핑 연습에 적합한 문장인지 검사
+   */
+  private static isTypingFriendly(text: string): boolean {
+    const cleaned = this.filterSpecialCharacters(text);
+    // 특수기호 제거 후 원본과 다르면 부적합한 문장
+    if (cleaned !== text) return false;
+    
+    // 너무 긴 문장 제외 (200자 초과)
+    if (text.length > 200) return false;
+    
+    // 연속된 공백 제외
+    if (/\s{3,}/.test(text)) return false;
+    
+    return true;
+  }
+
+  /**
+   * 디버그: 필터링 테스트용
+   */
+  static debugFilterTest() {
+    const testSentence = "공자는 「논어」에서 \"君子不器(군자불기): 군자는 그릇과 같아서는 안 된다\"고 가르쳤다.";
+    console.log('원본:', testSentence);
+    console.log('필터링 후:', this.filterSpecialCharacters(testSentence));
+    console.log('타이핑 적합성:', this.isTypingFriendly(testSentence));
+    
+    const sentences = this.getSentencesByDifficulty('ko', 'hard');
+    const filtered = sentences.filter(s => this.isTypingFriendly(s));
+    console.log(`전체 문장: ${sentences.length}, 필터링 후: ${filtered.length}`);
   }
 
   /**

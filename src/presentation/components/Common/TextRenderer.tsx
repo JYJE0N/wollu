@@ -38,18 +38,31 @@ const TextRenderer: React.FC<TextRendererProps> = ({
           const isTyped = index < currentIndex;
           const isCurrent = index === currentIndex;
           const userChar = userInput[index];
-          const isError = isTyped && userChar !== char;
+          // errors prop을 사용하여 오타 판정 (조합 중인 글자는 제외됨)
+          const isError = errors[index] === true;
           
-          let displayChar = char;
-          if (char === ' ') {
-            displayChar = showSpaces ? '␣' : char;
-          }
+          // 띄어쓰기 표시를 위한 특별 처리
+          const isSpace = char === ' ';
           
           // 타이핑된 글자
           if (isTyped) {
-            displayChar = userChar || char;
-            if (displayChar === ' ') {
-              displayChar = showSpaces ? '␣' : displayChar;
+            const displayChar = userChar || char;
+            
+            if (isSpace) {
+              return (
+                <span
+                  key={index}
+                  className={`inline-block w-[0.5em] ${
+                    isError 
+                      ? 'bg-red-100 dark:bg-red-900/30 rounded'
+                      : ''
+                  }`}
+                >
+                  {showSpaces && (
+                    <span className="opacity-20 text-gray-400 dark:text-gray-600 text-[0.6em] align-middle">·</span>
+                  )}
+                </span>
+              );
             }
             
             return (
@@ -68,19 +81,31 @@ const TextRenderer: React.FC<TextRendererProps> = ({
           
           // 현재 위치
           if (isCurrent) {
+            if (isSpace) {
+              return (
+                <span
+                  key={index}
+                  className="relative inline-block w-[0.5em] bg-yellow-100 dark:bg-yellow-900/30 rounded"
+                >
+                  {showSpaces && (
+                    <span className="opacity-30 text-gray-500 dark:text-gray-500 text-[0.6em] align-middle">·</span>
+                  )}
+                  {/* 커서 */}
+                  <motion.div
+                    className="absolute left-0 -bottom-1 w-full h-0.5 bg-blue-500 rounded"
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                  />
+                </span>
+              );
+            }
+            
             return (
               <span
                 key={index}
                 className="relative text-gray-900 dark:text-gray-100 bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded"
               >
-                {displayChar}
-                
-                {/* 조합 중인 글자 표시 */}
-                {isComposing && composingChar && (
-                  <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 text-sm text-blue-600 dark:text-blue-400 bg-blue-100 dark:bg-blue-900/70 px-2 py-1 rounded shadow-sm">
-                    {composingChar}
-                  </span>
-                )}
+                {char}
                 
                 {/* 커서 */}
                 <motion.div
@@ -93,12 +118,25 @@ const TextRenderer: React.FC<TextRendererProps> = ({
           }
           
           // 아직 타이핑하지 않은 글자
+          if (isSpace) {
+            return (
+              <span
+                key={index}
+                className="inline-block w-[0.5em]"
+              >
+                {showSpaces && (
+                  <span className="opacity-10 text-gray-300 dark:text-gray-700 text-[0.6em] align-middle">·</span>
+                )}
+              </span>
+            );
+          }
+          
           return (
             <span
               key={index}
               className="text-gray-400 dark:text-gray-500"
             >
-              {displayChar}
+              {char}
             </span>
           );
         })}

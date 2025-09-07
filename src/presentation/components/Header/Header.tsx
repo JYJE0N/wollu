@@ -1,24 +1,39 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Settings, Keyboard } from 'lucide-react';
+import { Keyboard } from 'lucide-react';
 import { LanguageToggle } from './LanguageToggle';
 import { ThemeDropdown, Theme } from './ThemeDropdown';
+import { SettingsPanel } from './SettingsPanel';
 
 interface HeaderProps {
   currentLanguage: 'ko' | 'en';
   onLanguageToggle: () => void;
-  onSettingsClick: () => void;
   currentTheme: Theme;
   onThemeChange: (theme: Theme) => void;
+  practiceMode: 'sentence' | 'words';
+  onModeChange: (mode: 'sentence' | 'words') => void;
+  wordCount: number;
+  onWordCountChange: (count: number) => void;
+  sentenceType: 'short' | 'medium' | 'long';
+  onSentenceTypeChange: (type: 'short' | 'medium' | 'long') => void;
+  sentenceVariant: 'basic' | 'punctuation' | 'numbers' | 'mixed';
+  onSentenceVariantChange: (variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
   currentLanguage,
   onLanguageToggle,
-  onSettingsClick,
   currentTheme,
   onThemeChange,
+  practiceMode,
+  onModeChange,
+  wordCount,
+  onWordCountChange,
+  sentenceType,
+  onSentenceTypeChange,
+  sentenceVariant,
+  onSentenceVariantChange,
 }) => {
   const [displayText, setDisplayText] = useState('');
   const brandText = '월루타자기';
@@ -76,9 +91,15 @@ export const Header: React.FC<HeaderProps> = ({
               </div>
               <div className="flex items-center space-x-1">
                 <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
-                  Ctrl+Shift+R
+                  Tab
                 </span>
                 <span className="text-xs">{currentLanguage === 'ko' ? '다시시작' : 'Restart'}</span>
+              </div>
+              <div className="flex items-center space-x-1">
+                <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
+                  Enter
+                </span>
+                <span className="text-xs">{currentLanguage === 'ko' ? '새 텍스트' : 'New Text'}</span>
               </div>
               <div className="flex items-center space-x-1">
                 <span className="font-mono bg-gray-100 dark:bg-gray-800 px-2 py-1 rounded text-xs">
@@ -107,13 +128,17 @@ export const Header: React.FC<HeaderProps> = ({
               currentLanguage={currentLanguage}
             />
 
-            <button
-              onClick={onSettingsClick}
-              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
-              aria-label="설정"
-            >
-              <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
+            <SettingsPanel
+              currentLanguage={currentLanguage}
+              practiceMode={practiceMode}
+              onModeChange={onModeChange}
+              wordCount={wordCount}
+              onWordCountChange={onWordCountChange}
+              sentenceType={sentenceType}
+              onSentenceTypeChange={onSentenceTypeChange}
+              sentenceVariant={sentenceVariant}
+              onSentenceVariantChange={onSentenceVariantChange}
+            />
           </div>
         </div>
       </div>

@@ -7,40 +7,73 @@ import { Language } from '@/data/languages';
 
 interface QuickActionsProps {
   practiceMode: 'sentence' | 'words';
-  difficulty: 'easy' | 'medium' | 'hard';
   currentLanguage: Language;
   onPracticeModeChange: (mode: 'sentence' | 'words') => void;
-  onDifficultyChange: (difficulty: 'easy' | 'medium' | 'hard') => void;
+  wordCount: number;
+  onWordCountChange: (count: number) => void;
+  sentenceType: 'short' | 'medium' | 'long';
+  onSentenceTypeChange: (type: 'short' | 'medium' | 'long') => void;
+  sentenceVariant: 'basic' | 'punctuation' | 'numbers' | 'mixed';
+  onSentenceVariantChange: (variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => void;
   isTypingActive: boolean;
   onStartTyping?: () => void;
 }
 
 export const QuickActions: React.FC<QuickActionsProps> = ({
   practiceMode,
-  difficulty,
   currentLanguage,
   onPracticeModeChange,
-  onDifficultyChange,
+  wordCount,
+  onWordCountChange,
+  sentenceType,
+  onSentenceTypeChange,
+  sentenceVariant,
+  onSentenceVariantChange,
   isTypingActive,
   onStartTyping,
 }) => {
-  const getDifficultyColor = (level: 'easy' | 'medium' | 'hard') => {
-    switch (level) {
-      case 'easy': return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800';
+  const getSentenceTypeColor = (type: 'short' | 'medium' | 'long') => {
+    switch (type) {
+      case 'short': return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-900/20 dark:border-green-800';
       case 'medium': return 'text-amber-600 bg-amber-50 border-amber-200 dark:text-amber-400 dark:bg-amber-900/20 dark:border-amber-800';
-      case 'hard': return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800';
+      case 'long': return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-900/20 dark:border-red-800';
     }
   };
 
-  const getDifficultyLabel = (level: 'easy' | 'medium' | 'hard') => {
+  const getSentenceTypeLabel = (type: 'short' | 'medium' | 'long') => {
     if (currentLanguage === 'ko') {
-      switch (level) {
-        case 'easy': return '쉬움';
-        case 'medium': return '보통';
-        case 'hard': return '어려움';
+      switch (type) {
+        case 'short': return '단문';
+        case 'medium': return '중문';
+        case 'long': return '장문';
       }
     }
-    return level.charAt(0).toUpperCase() + level.slice(1);
+    switch (type) {
+      case 'short': return 'Short';
+      case 'medium': return 'Medium';
+      case 'long': return 'Long';
+    }
+  };
+
+  const getSentenceVariantLabel = (variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => {
+    if (currentLanguage === 'ko') {
+      switch (variant) {
+        case 'basic': return '기본';
+        case 'punctuation': return '구두점';
+        case 'numbers': return '숫자';
+        case 'mixed': return '혼합';
+      }
+    }
+    switch (variant) {
+      case 'basic': return 'Basic';
+      case 'punctuation': return 'Punct';
+      case 'numbers': return 'Numbers';
+      case 'mixed': return 'Mixed';
+    }
+  };
+
+  const getWordCountLabel = (count: number) => {
+    return `${count}${currentLanguage === 'ko' ? '개' : 'w'}`;
   };
 
   return (
@@ -78,24 +111,75 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             <motion.div 
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
+              className="flex items-center space-x-4"
+            >
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {currentLanguage === 'ko' ? '길이:' : 'Length:'}
+                </span>
+                <div className="flex items-center space-x-1">
+                  {(['short', 'medium', 'long'] as const).map((type) => (
+                    <button
+                      key={type}
+                      onClick={() => onSentenceTypeChange(type)}
+                      disabled={isTypingActive}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+                        sentenceType === type
+                          ? getSentenceTypeColor(type)
+                          : 'text-gray-500 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
+                      } ${isTypingActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {getSentenceTypeLabel(type)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-gray-600 dark:text-gray-400">
+                  {currentLanguage === 'ko' ? '스타일:' : 'Style:'}
+                </span>
+                <div className="flex items-center space-x-1">
+                  {(['basic', 'punctuation', 'numbers', 'mixed'] as const).map((variant) => (
+                    <button
+                      key={variant}
+                      onClick={() => onSentenceVariantChange(variant)}
+                      disabled={isTypingActive}
+                      className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
+                        sentenceVariant === variant
+                          ? 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-800'
+                          : 'text-gray-500 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
+                      } ${isTypingActive ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    >
+                      {getSentenceVariantLabel(variant)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+          
+          {practiceMode === 'words' && (
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
               className="flex items-center space-x-2"
             >
               <span className="text-sm text-gray-600 dark:text-gray-400">
-                {currentLanguage === 'ko' ? '난이도:' : 'Level:'}
+                {currentLanguage === 'ko' ? '개수:' : 'Count:'}
               </span>
               <div className="flex items-center space-x-1">
-                {(['easy', 'medium', 'hard'] as const).map((level) => (
+                {([10, 25, 50, 100] as const).map((count) => (
                   <button
-                    key={level}
-                    onClick={() => onDifficultyChange(level)}
+                    key={count}
+                    onClick={() => onWordCountChange(count)}
                     disabled={isTypingActive}
                     className={`px-3 py-1.5 rounded-md text-xs font-medium border transition-all ${
-                      difficulty === level
-                        ? getDifficultyColor(level)
+                      wordCount === count
+                        ? 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-900/20 dark:border-blue-800'
                         : 'text-gray-500 bg-gray-50 border-gray-200 hover:bg-gray-100 dark:text-gray-400 dark:bg-gray-800 dark:border-gray-700 dark:hover:bg-gray-700'
                     } ${isTypingActive ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
-                    {getDifficultyLabel(level)}
+                    {getWordCountLabel(count)}
                   </button>
                 ))}
               </div>
@@ -112,7 +196,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             className={`flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-lg shadow-lg transition-all ${
               isTypingActive ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            title={currentLanguage === 'ko' ? '숏컷: Shift+Enter' : 'Shortcut: Shift+Enter'}
+            title={currentLanguage === 'ko' ? '숏컷: Enter' : 'Shortcut: Enter'}
           >
             <Shuffle className="w-4 h-4" />
             <span className="text-sm font-medium">
@@ -128,7 +212,7 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
             className={`flex items-center space-x-2 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg shadow-sm transition-all ${
               isTypingActive ? 'opacity-50 cursor-not-allowed' : ''
             }`}
-            title={currentLanguage === 'ko' ? '숏컷: Shift+Enter' : 'Shortcut: Shift+Enter'}
+            title={currentLanguage === 'ko' ? '숏컷: Tab' : 'Shortcut: Tab'}
           >
             <RotateCcw className="w-4 h-4" />
             <span className="text-sm font-medium">

@@ -10,20 +10,35 @@ import { Theme } from '@/hooks/useTheme';
 interface MainContentProps {
   currentLanguage: Language;
   currentTheme: Theme;
+  practiceMode: 'sentence' | 'words';
+  onModeChange: (mode: 'sentence' | 'words') => void;
+  wordCount: number;
+  onWordCountChange: (count: number) => void;
+  sentenceType: 'short' | 'medium' | 'long';
+  onSentenceTypeChange: (type: 'short' | 'medium' | 'long') => void;
+  sentenceVariant: 'basic' | 'punctuation' | 'numbers' | 'mixed';
+  onSentenceVariantChange: (variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => void;
 }
 
 export const MainContent: React.FC<MainContentProps> = ({
   currentLanguage,
   currentTheme,
+  practiceMode,
+  onModeChange,
+  wordCount,
+  onWordCountChange,
+  sentenceType,
+  onSentenceTypeChange,
+  sentenceVariant,
+  onSentenceVariantChange,
 }) => {
-  const [practiceMode, setPracticeMode] = useState<'sentence' | 'words'>('sentence');
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
   const [isTypingActive, setIsTypingActive] = useState(false);
   const [escPressCount, setEscPressCount] = useState(0);
   const [escTimer, setEscTimer] = useState<NodeJS.Timeout | null>(null);
   const typingEngineRef = useRef<{ 
     focusInput: () => void; 
     restart: () => void; 
+    loadNewText: () => void;
     pause: () => void; 
     resume: () => void; 
     quit: () => void; 
@@ -45,11 +60,19 @@ export const MainContent: React.FC<MainContentProps> = ({
         return;
       }
       
-      // Ctrl+Shift+R: Restart (avoid conflict with browser refresh Ctrl+R)
-      if (e.ctrlKey && e.shiftKey && e.key === 'R' && !isInputField) {
+      // Tab: Restart (더 쉬운 단일 키)
+      if (e.key === 'Tab' && !isInputField) {
         e.preventDefault();
         e.stopPropagation();
         typingEngineRef.current?.restart();
+        return;
+      }
+      
+      // Enter: New Text (새 텍스트 생성)
+      if (e.key === 'Enter' && !e.shiftKey && !isInputField) {
+        e.preventDefault();
+        e.stopPropagation();
+        typingEngineRef.current?.loadNewText();
         return;
       }
       
@@ -118,12 +141,16 @@ export const MainContent: React.FC<MainContentProps> = ({
           >
             <QuickActions 
               practiceMode={practiceMode}
-              difficulty={difficulty}
               currentLanguage={currentLanguage}
-              onPracticeModeChange={setPracticeMode}
-              onDifficultyChange={setDifficulty}
+              onPracticeModeChange={onModeChange}
+              wordCount={wordCount}
+              onWordCountChange={onWordCountChange}
+              sentenceType={sentenceType}
+              onSentenceTypeChange={onSentenceTypeChange}
+              sentenceVariant={sentenceVariant}
+              onSentenceVariantChange={onSentenceVariantChange}
               isTypingActive={isTypingActive}
-              onStartTyping={() => typingEngineRef.current?.focusInput()}
+              onStartTyping={() => typingEngineRef.current?.loadNewText()}
             />
           </motion.div>
 
@@ -136,7 +163,9 @@ export const MainContent: React.FC<MainContentProps> = ({
             <TypingEngine
               ref={typingEngineRef}
               practiceMode={practiceMode}
-              difficulty={difficulty}
+              wordCount={wordCount}
+              sentenceType={sentenceType}
+              sentenceVariant={sentenceVariant}
               currentLanguage={currentLanguage}
               onTypingStateChange={setIsTypingActive}
             />

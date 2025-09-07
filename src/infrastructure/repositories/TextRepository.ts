@@ -9,11 +9,14 @@ export class TextRepository implements ITextRepository {
     this.currentLanguage = language;
   }
 
-  getRandomSentence(): string {
-    // 랜덤 난이도 선택
-    const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
-    const randomDifficulty = difficulties[Math.floor(Math.random() * difficulties.length)];
-    return ExamplePool.getRandomSentence(this.currentLanguage, randomDifficulty);
+  getRandomSentence(difficulty?: 'easy' | 'medium' | 'hard'): string {
+    // 난이도가 지정되지 않은 경우 랜덤 선택
+    const selectedDifficulty = difficulty || (() => {
+      const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
+      return difficulties[Math.floor(Math.random() * difficulties.length)];
+    })();
+    
+    return ExamplePool.getRandomSentence(this.currentLanguage, selectedDifficulty);
   }
 
   getRandomWords(count: number): string {
@@ -26,5 +29,12 @@ export class TextRepository implements ITextRepository {
 
   getWordsByCategory(category: string): string[] {
     return ExamplePool.getWordsByCategory(this.currentLanguage, category, 50).split(' ');
+  }
+
+  getSentenceByTypeAndVariant(
+    type: 'short' | 'medium' | 'long', 
+    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
+  ): string {
+    return ExamplePool.getSentenceByTypeAndVariant(this.currentLanguage, type, variant);
   }
 }

@@ -9,12 +9,7 @@ export class StartTypingSessionUseCase {
     let text: string;
 
     if (mode === 'sentence') {
-      if (difficulty) {
-        const sentences = this.textRepository.getSentencesByDifficulty(difficulty);
-        text = sentences[Math.floor(Math.random() * sentences.length)];
-      } else {
-        text = this.textRepository.getRandomSentence();
-      }
+      text = this.textRepository.getRandomSentence(difficulty);
     } else {
       text = this.textRepository.getRandomWords(10);
     }
