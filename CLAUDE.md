@@ -9,29 +9,27 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 개발 서버
 ```bash
-npm run dev           # Turbopack 개발 서버 실행 (http://localhost:3000)
-npm run dev:turbo     # Turbopack 명시적 실행
-npm run dev:webpack   # Webpack 개발 서버 (대체)
+npm run dev              # Turbopack 개발 서버 실행 (http://localhost:3000)
+npm run dev:debug        # 디버그 모드로 개발 서버 실행
 ```
 
 ### 빌드 및 배포
 ```bash
-npm run build         # 프로덕션 빌드 (Turbopack)
-npm run build:turbo   # Turbopack 프로덕션 빌드
-npm run build:webpack # Webpack 프로덕션 빌드
-npm run start         # 프로덕션 서버 실행
+npm run build            # 프로덕션 빌드 (Turbopack)
+npm run build:analyze    # 번들 분석과 함께 빌드
+npm run start            # 프로덕션 서버 실행
 ```
 
 ### 코드 품질 검사
 ```bash
-npm run lint          # ESLint 실행
-npm run type-check    # TypeScript 타입 체크
+npm run lint             # ESLint 실행
+npm run lint:fix         # ESLint 자동 수정
+npm run type-check       # TypeScript 타입 체크
 ```
 
-### 기타 명령어
+### 유지보수
 ```bash
-npm run clean         # .next 빌드 폴더 삭제
-npm run clean:all     # 모든 캐시 및 node_modules 삭제
+npm run clean            # .next 빌드 폴더 삭제
 ```
 
 ## 아키텍처 구조
@@ -92,7 +90,7 @@ src/
 
 ### 순환 참조 방지
 - 계층별 단방향 의존성 유지
-- DI Container를 통한 의존성 주입
+- DI Container를 통한 의존성 주입 (`/src/infrastructure/di/DIContainer.ts`)
 - 인터페이스를 통한 느슨한 결합
 
 ## 디렉토리별 역할
@@ -117,22 +115,28 @@ src/
 - 커스텀 훅
 - UI 로직
 
-## 테스트 작성
-```bash
-# 테스트 파일 위치
-src/__tests__/
-├── domain/          # 도메인 로직 테스트
-├── application/     # 유스케이스 테스트
-├── infrastructure/  # 인프라 테스트
-└── presentation/    # 컴포넌트 테스트
-```
+### /src/components
+- 레거시 컴포넌트 (점진적 마이그레이션 중)
+- SimpleTypingPractice, EnhancedTypingPractice 등
+
+### /src/store
+- Zustand 기반 상태 관리
+- typingStore.ts: 메인 타이핑 스토어
+
+### /src/utils
+- 한글 처리 유틸리티
+- koreanUtils.ts, simpleKoreanUtils.ts, enhancedKoreanUtils.ts, advancedKoreanUtils.ts
+
+### /src/data
+- 예제 문장 및 단어 데이터
+- 한글/영어 문장 난이도별 구분 (easy, medium, hard)
 
 ## 환경 설정
 - **개발**: `NODE_ENV=development`
 - **프로덕션**: `NODE_ENV=production`
-- **cross-env** 사용으로 OS 독립적
+- **cross-env** 필수 사용 (Windows 호환성)
 
 ## 빌드 설정 특이사항
-- TypeScript/ESLint 오류 무시 설정 (`ignoreBuildErrors: true`)
+- TypeScript/ESLint 오류 무시 설정 (`ignoreBuildErrors: true`, `ignoreDuringBuilds: true`)
 - Turbopack 기본 사용
 - 절대 경로 import (`@/*`)
