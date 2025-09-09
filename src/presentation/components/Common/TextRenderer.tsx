@@ -56,12 +56,20 @@ const TextRenderer: React.FC<TextRendererProps> = ({
               key={index}
               className={`inline-block w-[0.5em] ${
                 isError 
-                  ? 'bg-red-100 dark:bg-red-900/30 rounded'
+                  ? 'rounded'
                   : ''
               }`}
+              style={{
+                backgroundColor: isError ? 'var(--error-light)' : 'transparent'
+              }}
             >
               {showSpaces && (
-                <span className="opacity-20 text-gray-400 dark:text-gray-600 text-[0.6em] align-middle">·</span>
+                <span 
+                  className="opacity-20 text-[0.6em] align-middle"
+                  style={{ color: 'var(--gray-400)' }}
+                >
+                  ·
+                </span>
               )}
             </span>
           );
@@ -72,9 +80,13 @@ const TextRenderer: React.FC<TextRendererProps> = ({
             key={index}
             className={`${
               isError 
-                ? 'text-red-500 bg-red-100 dark:bg-red-900/50 rounded px-1'
-                : 'text-gray-500 dark:text-gray-400'
+                ? 'rounded px-1'
+                : ''
             }`}
+            style={{
+              color: isError ? 'var(--typing-incorrect)' : 'var(--gray-500)',
+              backgroundColor: isError ? 'var(--error-light)' : 'transparent'
+            }}
           >
             {displayChar}
           </span>
@@ -87,14 +99,21 @@ const TextRenderer: React.FC<TextRendererProps> = ({
           return (
             <span
               key={index}
-              className="relative inline-block w-[0.5em] bg-yellow-100 dark:bg-yellow-900/30 rounded"
+              className="relative inline-block w-[0.5em] rounded"
+              style={{ backgroundColor: 'var(--warning-light)' }}
             >
               {showSpaces && (
-                <span className="opacity-30 text-gray-500 dark:text-gray-500 text-[0.6em] align-middle">·</span>
+                <span 
+                  className="opacity-30 text-[0.6em] align-middle"
+                  style={{ color: 'var(--gray-500)' }}
+                >
+                  ·
+                </span>
               )}
               {/* 커서 */}
               <motion.div
-                className="absolute left-0 -bottom-1 w-full h-0.5 bg-blue-500 rounded"
+                className="absolute left-0 -bottom-1 w-full h-0.5 rounded"
+                style={{ backgroundColor: 'var(--typing-current)' }}
                 animate={{ opacity: [1, 0.3, 1] }}
                 transition={{ duration: 1, repeat: Infinity }}
               />
@@ -105,13 +124,18 @@ const TextRenderer: React.FC<TextRendererProps> = ({
         return (
           <span
             key={index}
-            className="relative text-gray-900 dark:text-gray-100 bg-yellow-100 dark:bg-yellow-900/30 px-1 rounded"
+            className="relative px-1 rounded"
+            style={{ 
+              color: 'var(--foreground)',
+              backgroundColor: 'var(--warning-light)'
+            }}
           >
             {char}
             
             {/* 커서 */}
             <motion.div
-              className="absolute left-0 -bottom-1 w-full h-0.5 bg-blue-500 rounded"
+              className="absolute left-0 -bottom-1 w-full h-0.5 rounded"
+              style={{ backgroundColor: 'var(--typing-current)' }}
               animate={{ opacity: [1, 0.3, 1] }}
               transition={{ duration: 1, repeat: Infinity }}
             />
@@ -127,7 +151,12 @@ const TextRenderer: React.FC<TextRendererProps> = ({
             className="inline-block w-[0.5em]"
           >
             {showSpaces && (
-              <span className="opacity-10 text-gray-300 dark:text-gray-700 text-[0.6em] align-middle">·</span>
+              <span 
+                className="opacity-10 text-[0.6em] align-middle"
+                style={{ color: 'var(--gray-300)' }}
+              >
+                ·
+              </span>
             )}
           </span>
         );
@@ -136,7 +165,7 @@ const TextRenderer: React.FC<TextRendererProps> = ({
       return (
         <span
           key={index}
-          className="text-gray-400 dark:text-gray-500"
+          style={{ color: 'var(--typing-pending)' }}
         >
           {char}
         </span>
@@ -147,15 +176,24 @@ const TextRenderer: React.FC<TextRendererProps> = ({
   return (
     <div className="relative">
       {/* 간단한 한 줄 텍스트 렌더러 - monkeytype 스타일 */}
-      <div className="text-2xl md:text-3xl leading-relaxed font-mono select-none p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+      <div 
+        className="text-2xl md:text-3xl leading-relaxed font-mono select-none p-8 rounded-lg"
+        style={{ backgroundColor: 'var(--surface)' }}
+      >
         {renderedChars}
       </div>
       
       {/* 간단한 하단 통계 */}
-      <div className="mt-4 text-sm text-gray-600 dark:text-gray-400 text-center">
+      <div 
+        className="mt-4 text-sm text-center"
+        style={{ color: 'var(--gray-600)' }}
+      >
         {currentIndex} / {text.length}
         {errorCount > 0 && (
-          <span className="ml-4 text-red-500">
+          <span 
+            className="ml-4"
+            style={{ color: 'var(--typing-incorrect)' }}
+          >
             오타 {errorCount}개
           </span>
         )}

@@ -4,15 +4,49 @@ import { useEffect, useState } from 'react';
 
 export type Theme = 'light' | 'dark' | 'system';
 
-export const useTheme = () => {
-  const [theme, setTheme] = useState<Theme>('system');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+// FOUC 방지를 위한 초기 테마 감지
+const getInitialTheme = (): Theme => {
+  if (typeof window === 'undefined') return 'system';
+  
+  // localStorage에서 저장된 테마 확인
+  const stored = localStorage.getItem('theme') as Theme | null;
+  if (stored) return stored;
+  
+  return 'system';
+};
 
+// 시스템 테마 감지 함수
+const getSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'light';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+};
+
+// 초기 해결된 테마 계산
+const getInitialResolvedTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined') return 'light';
+  
+  const stored = localStorage.getItem('theme') as Theme | null;
+  if (stored === 'light' || stored === 'dark') return stored;
+  
+  return getSystemTheme();
+};
+
+export const useTheme = () => {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(getInitialResolvedTheme);
+
+  // 초기 로드 시 DOM에 즉시 클래스 적용 (FOUC 방지)
   useEffect(() => {
-    const stored = localStorage.getItem('theme') as Theme | null;
-    if (stored) {
-      setTheme(stored);
+    const initialResolvedTheme = getInitialResolvedTheme();
+    
+    // 즉시 DOM에 적용
+    if (initialResolvedTheme === 'dark') {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
     }
+    
+    setResolvedTheme(initialResolvedTheme);
   }, []);
 
   useEffect(() => {
