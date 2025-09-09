@@ -4,6 +4,9 @@ import { HangulService } from '@/domain/services/HangulService';
 import { TextRepository } from '../repositories/TextRepository';
 import { IStorageService, LocalStorageService } from '../services/StorageService';
 import { TypingSessionService } from '@/application/services/TypingSessionService';
+import { IUserStatsRepository } from '@/domain/repositories/IUserStatsRepository';
+import { LocalStorageUserStatsRepository } from '@/infrastructure/repositories/LocalStorageUserStatsRepository';
+import { IUserStatsService, UserStatsService } from '@/domain/services/UserStatsService';
 
 class DIContainer {
   private static instance: DIContainer;
@@ -25,9 +28,13 @@ class DIContainer {
     // Infrastructure
     this.services.set('ITextRepository', new TextRepository());
     this.services.set('IStorageService', new LocalStorageService());
+    this.services.set('IUserStatsRepository', new LocalStorageUserStatsRepository());
     
     // Domain Services
     this.services.set('IHangulService', new HangulService());
+    
+    const userStatsRepository = this.services.get('IUserStatsRepository');
+    this.services.set('IUserStatsService', new UserStatsService(userStatsRepository));
     
     // Application Services
     const textRepository = this.services.get('ITextRepository');
@@ -75,4 +82,12 @@ export function getHangulService(): IHangulService {
 
 export function getTypingSessionService(): TypingSessionService {
   return diContainer.get<TypingSessionService>('TypingSessionService');
+}
+
+export function getUserStatsRepository(): IUserStatsRepository {
+  return diContainer.get<IUserStatsRepository>('IUserStatsRepository');
+}
+
+export function getUserStatsService(): IUserStatsService {
+  return diContainer.get<IUserStatsService>('IUserStatsService');
 }

@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { motion } from 'framer-motion';
 import { RotateCcw, TrendingUp, Clock, Target, Keyboard } from 'lucide-react';
 import { Language } from '@/data/languages';
-import { getTextRepository, getHangulService } from '@/infrastructure/di/DIContainer';
+import { getTextRepository, getHangulService, getUserStatsService } from '@/infrastructure/di/DIContainer';
 import TextRenderer from '@/presentation/components/Common/TextRenderer';
 import { useHangulComposition } from '@/presentation/hooks/useHangulComposition';
 import { TypingStats as DomainTypingStats } from '@/domain/valueObjects/TypingStats';
@@ -112,6 +112,7 @@ export const TypingEngine = React.forwardRef<
   }));
   const textRepository = getTextRepository();
   const hangulService = getHangulService();
+  const userStatsService = getUserStatsService();
 
   useEffect(() => {
     textRepository.setLanguage(currentLanguage);
@@ -309,7 +310,7 @@ export const TypingEngine = React.forwardRef<
 
   // Stop timer when completed and calculate final stats
   useEffect(() => {
-    if (isCompleted && isStarted && startTime) {
+    if (isCompleted && isStarted && startTime && !isPaused) {
       setIsPaused(true);
       onTypingStateChange(false);
       
@@ -344,17 +345,36 @@ export const TypingEngine = React.forwardRef<
         : 100;
       
       // Set final stats
-      setStats(prev => ({
-        ...prev,
+      const finalStats = {
+        ...stats,
         wpm: finalWpm,
         cpm: finalCpm,
         accuracy,
         totalChars: targetText.length,
         correctChars: correct,
         errors: errors,
-      }));
+      };
+      
+      setStats(finalStats);
+
+      // Record session to user stats
+      userStatsService.recordSession('default_user', {
+        language: currentLanguage,
+        practiceMode,
+        textLength: targetText.length,
+        wpm: finalWpm,
+        cpm: finalCpm,
+        accuracy,
+        timeElapsed: totalSeconds,
+        totalChars: targetText.length,
+        correctChars: correct,
+        errors: errors,
+        keyStrokes: finalStats.keyStrokes,
+      }).catch(error => {
+        console.error('Failed to record session stats:', error);
+      });
     }
-  }, [isCompleted, isStarted, startTime, pausedTime, targetText, userInput, isComposing, onTypingStateChange]);
+  }, [isCompleted, isStarted, startTime, pausedTime, targetText, userInput, isComposing, onTypingStateChange, correct, errors, stats, currentLanguage, practiceMode, userStatsService]);
 
   return (
     <div className="h-full flex flex-col">
