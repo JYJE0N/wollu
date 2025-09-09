@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { TypingSessionEntity } from '@/domain/entities/TypingSession';
 import { TypingStats } from '@/domain/valueObjects/TypingStats';
+import { SentenceLength, SentenceVariant } from '@/domain/repositories/ITextRepository';
 import { getTypingSessionService } from '@/infrastructure/di/DIContainer';
 
 export function useTypingSession() {
@@ -17,16 +18,19 @@ export function useTypingSession() {
     }
   }, []);
 
-  const startNewSession = useCallback((mode: 'sentence' | 'words', difficulty?: 'easy' | 'medium' | 'hard') => {
-    setIsLoading(true);
-    try {
-      const newSession = typingService.startNewSession(mode, difficulty);
-      setSession(newSession);
-      setStats(null);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [typingService]);
+  const startNewSession = useCallback(
+    (mode: 'sentence' | 'words', length: SentenceLength = 'short', variant: SentenceVariant = 'basic') => {
+      setIsLoading(true);
+      try {
+        const newSession = typingService.startNewSession(mode, length, variant);
+        setSession(newSession);
+        setStats(null);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 
+    [typingService]
+  );
 
   const updateInput = useCallback((input: string) => {
     if (!session) return;

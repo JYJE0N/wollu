@@ -198,7 +198,7 @@ export const SettingsPanel: React.FC<SettingsPanelProps> = ({
                     icon: <IoReorderTwo className="w-4 h-4" />
                   }}
                   value={practiceMode}
-                  onChange={onModeChange}
+                  onChange={(value) => onModeChange(value as 'sentence' | 'words')}
                   className="w-full"
                 />
               </div>

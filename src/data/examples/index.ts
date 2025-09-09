@@ -1,25 +1,31 @@
 // 예제 Pool 통합 인덱스
-import { easyKoreanSentences } from './korean/sentences/easy';
-import { mediumKoreanSentences } from './korean/sentences/medium';
-import { hardKoreanSentences } from './korean/sentences/hard';
-import { easyEnglishSentences } from './english/sentences/easy';
-import { mediumEnglishSentences } from './english/sentences/medium';
-import { hardEnglishSentences } from './english/sentences/hard';
-import { allKoreanWords, koreanWordPools } from './words/korean';
-import { allEnglishWords, englishWordPools } from './words/english';
 import { Language } from '@/data/languages';
 
-// 문장 예제 통합
+// 한글 문장 imports
+import { koreanShortSentencesByType } from './korean/sentences/short/index';
+import { koreanMediumSentencesByType } from './korean/sentences/medium/index';
+import { koreanLongSentencesByType } from './korean/sentences/long/index';
+
+// 영어 문장 imports
+import { englishShortSentencesByType } from './english/sentences/short/index';
+import { englishMediumSentencesByType } from './english/sentences/medium/index';
+import { englishLongSentencesByType } from './english/sentences/long/index';
+
+// 단어 imports
+import { allKoreanWords, koreanWordPools } from './words/korean';
+import { allEnglishWords, englishWordPools } from './words/english';
+
+// 길이별 + 속성별 문장 구조
 export const sentenceExamples = {
   ko: {
-    easy: easyKoreanSentences,
-    medium: mediumKoreanSentences,
-    hard: hardKoreanSentences,
+    short: koreanShortSentencesByType,
+    medium: koreanMediumSentencesByType,
+    long: koreanLongSentencesByType,
   },
   en: {
-    easy: easyEnglishSentences,
-    medium: mediumEnglishSentences,
-    hard: hardEnglishSentences,
+    short: englishShortSentencesByType,
+    medium: englishMediumSentencesByType,
+    long: englishLongSentencesByType,
   }
 };
 
@@ -35,37 +41,66 @@ export const wordExamples = {
   }
 };
 
+// 타입 정의
+export type SentenceLength = 'short' | 'medium' | 'long';
+export type SentenceVariant = 'basic' | 'punctuation' | 'numbers' | 'mixed';
+
 // 유틸리티 함수들
 export class ExamplePool {
-  // 사용된 문장들을 추적하는 Set (언어별, 난이도별)
+  // 사용된 문장들을 추적하는 Set (언어별, 길이별, 속성별)
   private static usedSentences: Map<string, Set<string>> = new Map();
   
   /**
    * 사용된 문장 키 생성
    */
-  private static getUsedKey(language: Language, difficulty: 'easy' | 'medium' | 'hard'): string {
-    return `${language}-${difficulty}`;
+  private static getUsedKey(
+    language: Language, 
+    length: SentenceLength, 
+    variant: SentenceVariant
+  ): string {
+    return `${language}-${length}-${variant}`;
   }
   
   /**
    * 사용된 문장 초기화
    */
-  static resetUsedSentences(language?: Language, difficulty?: 'easy' | 'medium' | 'hard'): void {
-    if (language && difficulty) {
-      const key = this.getUsedKey(language, difficulty);
+  static resetUsedSentences(
+    language?: Language, 
+    length?: SentenceLength, 
+    variant?: SentenceVariant
+  ): void {
+    if (language && length && variant) {
+      const key = this.getUsedKey(language, length, variant);
       this.usedSentences.delete(key);
     } else {
       this.usedSentences.clear();
     }
   }
+
   /**
-   * 난이도별 문장 가져오기
+   * 길이와 속성에 따른 문장 가져오기
    */
-  static getSentencesByDifficulty(
+  static getSentencesByLengthAndVariant(
     language: Language,
-    difficulty: 'easy' | 'medium' | 'hard'
+    length: SentenceLength,
+    variant: SentenceVariant
   ): string[] {
-    return sentenceExamples[language][difficulty];
+    const lengthData = sentenceExamples[language][length];
+    
+    if (!lengthData) {
+      console.warn(`No data found for ${language} ${length} sentences`);
+      return [];
+    }
+    
+    const variantData = lengthData[variant];
+    
+    if (!variantData) {
+      console.warn(`No ${variant} sentences found for ${language} ${length}`);
+      // fallback to all sentences of that length
+      return lengthData.all || [];
+    }
+    
+    return variantData;
   }
 
   /**
@@ -73,15 +108,33 @@ export class ExamplePool {
    */
   static getRandomSentence(
     language: Language,
-    difficulty: 'easy' | 'medium' | 'hard'
+    length: SentenceLength,
+    variant: SentenceVariant
   ): string {
-    const sentences = this.getSentencesByDifficulty(language, difficulty);
-    const key = this.getUsedKey(language, difficulty);
+    const sentences = this.getSentencesByLengthAndVariant(language, length, variant);
+    
+    if (sentences.length === 0) {
+      // fallback: 해당 길이의 모든 문장에서 선택
+      const allSentences = sentenceExamples[language][length]?.all || [];
+      if (allSentences.length === 0) {
+        return "No sentences available";
+      }
+      const randomIndex = Math.floor(Math.random() * allSentences.length);
+      return allSentences[randomIndex];
+    }
+    
+    const key = this.getUsedKey(language, length, variant);
     
     // 타이핑 연습에 적합한 문장들만 필터링
     const typingFriendlySentences = sentences.filter(sentence => 
       this.isTypingFriendly(sentence)
     );
+    
+    if (typingFriendlySentences.length === 0) {
+      // 적합한 문장이 없으면 원본에서 선택
+      const randomIndex = Math.floor(Math.random() * sentences.length);
+      return sentences[randomIndex];
+    }
     
     // 해당 카테고리의 사용된 문장 Set 가져오기 또는 생성
     if (!this.usedSentences.has(key)) {
@@ -95,7 +148,7 @@ export class ExamplePool {
     // 모든 문장을 사용했다면 사용 기록 초기화
     if (availableSentences.length === 0) {
       usedSet.clear();
-      return this.getRandomSentence(language, difficulty); // 재귀 호출
+      return this.getRandomSentence(language, length, variant); // 재귀 호출
     }
     
     // 사용 가능한 문장 중 랜덤 선택
@@ -140,32 +193,31 @@ export class ExamplePool {
   }
 
   /**
-   * 문장 통계 정보 (사용 현황 포함)
+   * 문장 통계 정보 (새로운 구조)
    */
   static getSentenceStats(language: Language) {
-    const stats = {
-      easy: sentenceExamples[language].easy.length,
-      medium: sentenceExamples[language].medium.length,
-      hard: sentenceExamples[language].hard.length,
+    const lengths: SentenceLength[] = ['short', 'medium', 'long'];
+    const variants: SentenceVariant[] = ['basic', 'punctuation', 'numbers', 'mixed'];
+    
+    const stats: Record<SentenceLength, Record<SentenceVariant, number>> = {
+      short: { basic: 0, punctuation: 0, numbers: 0, mixed: 0 },
+      medium: { basic: 0, punctuation: 0, numbers: 0, mixed: 0 },
+      long: { basic: 0, punctuation: 0, numbers: 0, mixed: 0 }
     };
     
-    // 사용된 문장 수 계산
-    const usedStats = {
-      easy: this.usedSentences.get(this.getUsedKey(language, 'easy'))?.size || 0,
-      medium: this.usedSentences.get(this.getUsedKey(language, 'medium'))?.size || 0,
-      hard: this.usedSentences.get(this.getUsedKey(language, 'hard'))?.size || 0,
-    };
+    let totalCount = 0;
+    
+    for (const length of lengths) {
+      for (const variant of variants) {
+        const sentences = this.getSentencesByLengthAndVariant(language, length, variant);
+        stats[length][variant] = sentences.length;
+        totalCount += sentences.length;
+      }
+    }
     
     return {
-      total: stats,
-      used: usedStats,
-      available: {
-        easy: stats.easy - usedStats.easy,
-        medium: stats.medium - usedStats.medium,
-        hard: stats.hard - usedStats.hard,
-      },
-      totalCount: stats.easy + stats.medium + stats.hard,
-      totalUsed: usedStats.easy + usedStats.medium + usedStats.hard,
+      byLength: stats,
+      totalCount
     };
   }
 
@@ -191,84 +243,9 @@ export class ExamplePool {
   }
 
   /**
-   * 타입과 variant에 따른 문장 가져오기 (세팅패널용)
-   */
-  static getSentenceByTypeAndVariant(
-    language: Language,
-    type: 'short' | 'medium' | 'long',
-    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
-  ): string {
-    // 타입을 난이도로 매핑
-    const difficultyMap = {
-      'short': 'easy' as const,
-      'medium': 'medium' as const, 
-      'long': 'hard' as const
-    };
-    
-    const difficulty = difficultyMap[type];
-    const sentences = this.getSentencesByDifficulty(language, difficulty);
-    
-    // variant에 따른 필터링
-    const filteredSentences = this.filterSentencesByVariant(sentences, variant);
-    
-    // 필터링된 문장이 없으면 전체에서 랜덤 선택
-    if (filteredSentences.length === 0) {
-      return this.getRandomSentence(language, difficulty);
-    }
-    
-    // 필터링된 문장에서 랜덤 선택
-    const randomIndex = Math.floor(Math.random() * filteredSentences.length);
-    return filteredSentences[randomIndex];
-  }
-  
-  /**
-   * variant에 따른 문장 필터링
-   */
-  private static filterSentencesByVariant(
-    sentences: string[],
-    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
-  ): string[] {
-    // 먼저 타이핑 연습에 적합한 문장들만 필터링
-    const typingFriendlySentences = sentences.filter(sentence => 
-      this.isTypingFriendly(sentence)
-    );
-    
-    switch (variant) {
-      case 'basic':
-        // 구두점과 숫자가 없는 기본 문장만
-        return typingFriendlySentences.filter(sentence => 
-          !this.hasPunctuation(sentence) && !this.hasNumbers(sentence)
-        );
-      
-      case 'punctuation':
-        // 구두점이 포함된 문장만
-        return typingFriendlySentences.filter(sentence => 
-          this.hasPunctuation(sentence) && !this.hasNumbers(sentence)
-        );
-      
-      case 'numbers':
-        // 숫자가 포함된 문장만
-        return typingFriendlySentences.filter(sentence => 
-          this.hasNumbers(sentence) && !this.hasPunctuation(sentence)
-        );
-      
-      case 'mixed':
-        // 구두점과 숫자가 모두 포함된 문장만
-        return typingFriendlySentences.filter(sentence => 
-          this.hasPunctuation(sentence) && this.hasNumbers(sentence)
-        );
-      
-      default:
-        return typingFriendlySentences;
-    }
-  }
-  
-  /**
    * 구두점 포함 여부 검사
    */
   private static hasPunctuation(text: string): boolean {
-    // 한글 구두점: . , ! ? : ; " ' ( ) [ ] { } - / 등
-    // 영문 구두점도 포함
     const punctuationRegex = /[.,!?:;"'()\[\]{}\-\/~`@#$%^&*+=<>|\\]/;
     return punctuationRegex.test(text);
   }
@@ -286,11 +263,7 @@ export class ExamplePool {
    */
   private static filterSpecialCharacters(text: string): string {
     // 키보드에 없는 특수기호들 제거
-    // 수학 기호: ¶〖〗⎡⎛⎜⎝⎞⎟⎠⎤⎥⎦⎧⎨⎩⎪⎫⎬⎭ 등
-    // 원문자: ①②③④⑤⑥⑦⑧⑨⑩ 등
-    // 특수 인용부호: 『』「」｢｣〈〉《》【】〔〕〘〙〚〛 등
-    // 기타 특수문자: ★☆♪♫♬♭♯♮…‥※‡†§ 등
-    const specialCharsRegex = /[¶〖〗⎡⎛⎜⎝⎞⎟⎠⎤⎥⎦⎧⎨⎩⎪⎫⎬⎭⎮⎯⎰⎱⎲⎳⎴⎵⎶⎷⎸⎹⎺⎻⎼⎽⎾⎿⏀⏁⏂⏃⏄⏅⏆⏇⏈⏉⏊⏋⏌⏍⏎⏏⏐⏑⏒⏓⏔⏕⏖⏗⏘⏙⏚⏛⏜⏝⏞⏟⏠⏡⏢⏣⏤⏥⏦⏧⏨⏩⏪⏫⏬⏭⏮⏯⏰⏱⏲⏳⏴⏵⏶⏷⏸⏹⏺⏻⏼⏽⏾⏿①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉠㉡㉢㉣㉤㉥㉦㉧㉨㉩㉪㉫㉬㉭㉮㉯㉰㉱㉲㉳㉴㉵㉶㉷㉸㉹㉺㉻★☆♪♫♬♭♯♮…‥※‡†§『』「」｢｣〈〉《》【】〔〕〘〙〚〛∀∃∄∅∆∇∈∉∊∋∌∍∎∏∐∑−∓∔∕∖∗∘∙√∛∜∝∞∟∠∡∢∣∤∥∦∧∨∩∪∫∬∭∮∯∰∱∲∳∴∵∶∷∸∹∺∻∼∽∾∿≀≁≂≃≄≅≆≇≈≉≊≋≌≍≎≏≐≑≒≓≔≕≖≗≘≙≚≛≜≝≞≟≠≡≢≣≤≥≦≧≨≩⊀⊁⊂⊃⊄⊅⊆⊇⊈⊉⊊⊋⊌⊍⊎⊏⊐⊑⊒⊓⊔⊕⊖⊗⊘⊙⊚⊛⊜⊝⊞⊟⊠⊡⊢⊣⊤⊥⊦⊧⊨⊩⊪⊫⊬⊭⊮⊯⊰⊱⊲⊳⊴⊵⊶⊷⊸⊹⊺⊻⊼⊽⊾⊿⋀⋁⋂⋃⋄⋅⋆⋇⋈⋉⋊⋋⋌⋍⋎⋏⋐⋑⋒⋓⋔⋕⋖⋗⋘⋙⋚⋛⋜⋝⋞⋟⋠⋡⋢⋣⋤⋥⋦⋧⋨⋩⋪⋫⋬⋭⋮⋯⋰⋱⋲⋳⋴⋵⋶⋷⋸⋹⋺⋻⋼⋽⋾⋿]/g;
+    const specialCharsRegex = /[¶〖〗⎡⎛⎜⎝⎞⎟⎠⎤⎥⎦⎧⎨⎩⎪⎫⎬⎭①②③④⑤⑥⑦⑧⑨⑩⑪⑫⑬⑭⑮⑯⑰⑱⑲⑳㉠㉡㉢㉣㉤㉥㉦㉧㉨㉩㉪㉫㉬㉭㉮㉯㉰㉱㉲㉳㉴㉵㉶㉷㉸㉹㉺㉻★☆♪♫♬♭♯♮…‥※‡†§『』「」｢｣〈〉《》【】〔〕〘〙〚〛]/g;
     
     return text.replace(specialCharsRegex, '');
   }
@@ -310,20 +283,6 @@ export class ExamplePool {
     if (/\s{3,}/.test(text)) return false;
     
     return true;
-  }
-
-  /**
-   * 디버그: 필터링 테스트용
-   */
-  static debugFilterTest() {
-    const testSentence = "공자는 「논어」에서 \"君子不器(군자불기): 군자는 그릇과 같아서는 안 된다\"고 가르쳤다.";
-    console.log('원본:', testSentence);
-    console.log('필터링 후:', this.filterSpecialCharacters(testSentence));
-    console.log('타이핑 적합성:', this.isTypingFriendly(testSentence));
-    
-    const sentences = this.getSentencesByDifficulty('ko', 'hard');
-    const filtered = sentences.filter(s => this.isTypingFriendly(s));
-    console.log(`전체 문장: ${sentences.length}, 필터링 후: ${filtered.length}`);
   }
 
   /**

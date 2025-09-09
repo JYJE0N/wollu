@@ -1,0 +1,13 @@
+// English long sentences - with punctuation
+export const punctuationEnglishLongSentences = [
+  "What is life? The answer to this question will differ for each person, but what is clear is that we are all finding meaning in our own ways. Sometimes joy and happiness, sometimes sadness and pain come to us, but all of these make our lives richer.",
+  "\"What does it take to achieve your dreams?\" Many people ask this. First, you need clear goals. Second, constant effort is required. Third, you must have the courage not to fear failure. Finally, the patience not to give up is most important!",
+  "The main items discussed in today's meeting are as follows: new product development plan, marketing strategy establishment, and organizational restructuring. Department heads conducted in-depth discussions on these matters and shared the conviction that \"if we work together, we will definitely achieve our goals.\"",
+  "She wrote in her diary: \"Today was really special. It rained in the morning, but bright sunshine appeared in the afternoon. Just like my heart... I was depressed at first, but after meeting friends, I felt much better. Life seems so mysterious.\"",
+  "The world we live in is really complex; but even in that complexity, we can discover simple truths. Love, friendship, trust - these values are eternal things that don't change even as times change. \"In the end, what matters is how we live.\"",
+  "While reading a book, I suddenly discovered this passage: \"Happiness is not a destination but the journey itself.\" What a meaningful statement! We often think we'll be happy at some point in the future, but in fact, happiness is with us even in this moment.",
+  "The teacher said: \"Students, studying is not just for exams. It's a process of preparing for your future and a journey to become better people.\" The students nodded in agreement, and at that moment, the classroom was filled with passion!",
+  "\"Why do we fear failure?\" the speaker asked the audience. \"Failure is a stepping stone to success. Edison failed thousands of times before inventing the light bulb, but he said: 'I haven't failed, I've just found ways that don't work.'\"",
+  "Today's news headline: \"Climate change threatens our future!\" Experts warn - if we don't act now, we'll face irreversible consequences. It's time for all of us to start with small actions; recycling, energy conservation, using public transportation, etc.",
+  "He began his letter like this: \"Dear family, I'm sending my greetings after a long time. Life here was difficult at first, but I've adapted a lot now. I think of you every day and eagerly await the day we meet again...\"",
+];

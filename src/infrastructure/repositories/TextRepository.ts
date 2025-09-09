@@ -1,6 +1,6 @@
 import { ITextRepository } from '@/domain/repositories/ITextRepository';
 import { Language } from '@/data/languages';
-import ExamplePool from '@/data/examples';
+import ExamplePool, { SentenceLength, SentenceVariant } from '@/data/examples';
 
 export class TextRepository implements ITextRepository {
   private currentLanguage: Language = 'ko';
@@ -9,22 +9,16 @@ export class TextRepository implements ITextRepository {
     this.currentLanguage = language;
   }
 
-  getRandomSentence(difficulty?: 'easy' | 'medium' | 'hard'): string {
-    // 난이도가 지정되지 않은 경우 랜덤 선택
-    const selectedDifficulty = difficulty || (() => {
-      const difficulties: Array<'easy' | 'medium' | 'hard'> = ['easy', 'medium', 'hard'];
-      return difficulties[Math.floor(Math.random() * difficulties.length)];
-    })();
-    
-    return ExamplePool.getRandomSentence(this.currentLanguage, selectedDifficulty);
+  getRandomSentence(length: SentenceLength = 'short', variant: SentenceVariant = 'basic'): string {
+    return ExamplePool.getRandomSentence(this.currentLanguage, length, variant);
   }
 
   getRandomWords(count: number): string {
     return ExamplePool.getRandomWords(this.currentLanguage, count);
   }
 
-  getSentencesByDifficulty(difficulty: 'easy' | 'medium' | 'hard'): string[] {
-    return ExamplePool.getSentencesByDifficulty(this.currentLanguage, difficulty);
+  getSentencesByLengthAndVariant(length: SentenceLength, variant: SentenceVariant): string[] {
+    return ExamplePool.getSentencesByLengthAndVariant(this.currentLanguage, length, variant);
   }
 
   getWordsByCategory(category: string): string[] {
@@ -32,9 +26,9 @@ export class TextRepository implements ITextRepository {
   }
 
   getSentenceByTypeAndVariant(
-    type: 'short' | 'medium' | 'long', 
-    variant: 'basic' | 'punctuation' | 'numbers' | 'mixed'
+    type: SentenceLength, 
+    variant: SentenceVariant
   ): string {
-    return ExamplePool.getSentenceByTypeAndVariant(this.currentLanguage, type, variant);
+    return ExamplePool.getRandomSentence(this.currentLanguage, type, variant);
   }
 }

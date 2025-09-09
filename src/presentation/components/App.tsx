@@ -14,7 +14,7 @@ import { useTheme } from '@/hooks/useTheme';
 export default function App() {
   const [currentText, setCurrentText] = useState('');
   const [practiceMode, setPracticeMode] = useState<'sentence' | 'words'>('sentence');
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('medium');
+  // difficulty는 더 이상 사용하지 않음 - sentenceType으로 대체
   const [currentLanguage, setCurrentLanguage] = useState<Language>('ko');
   const [isInitialized, setIsInitialized] = useState(false);
   
@@ -63,27 +63,14 @@ export default function App() {
     toast.success(message);
   };
 
-  const handleDifficultyChange = (newDifficulty: 'easy' | 'medium' | 'hard') => {
-    setDifficulty(newDifficulty);
-    if (practiceMode === 'sentence') {
-      const newText = textRepository.getSentencesByDifficulty(newDifficulty)[0];
-      setCurrentText(newText);
-      const difficultyText = currentLanguage === 'ko'
-        ? (newDifficulty === 'easy' ? '쉬움' : newDifficulty === 'medium' ? '보통' : '어려움')
-        : (newDifficulty === 'easy' ? 'Easy' : newDifficulty === 'medium' ? 'Medium' : 'Hard');
-      const message = currentLanguage === 'ko' 
-        ? `난이도 변경: ${difficultyText}`
-        : `Difficulty changed: ${difficultyText}`;
-      toast.success(message);
-    }
-  };
+  // difficulty 관련 핸들러는 더 이상 사용하지 않음
 
   const handleLanguageChange = (language: Language) => {
     setCurrentLanguage(language);
     textRepository.setLanguage(language);
     const newText = practiceMode === 'sentence' 
-      ? textRepository.getSentencesByDifficulty(difficulty)[0]
-      : textRepository.getRandomWords(10);
+      ? textRepository.getSentenceByTypeAndVariant(sentenceType, sentenceVariant)
+      : textRepository.getRandomWords(wordCount);
     setCurrentText(newText);
     const languageName = availableLanguages.find(l => l.code === language)?.name || '';
     const message = currentLanguage === 'ko' 

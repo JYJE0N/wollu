@@ -1,0 +1,13 @@
+// English long sentences - with numbers
+export const numbersEnglishLongSentences = [
+  "Our company was established in 2010 and has grown steadily over the past 14 years with 3500 employees currently working in 25 branches nationwide and annual sales exceeding 850 billion won placing us in 3rd position in the industry",
+  "15000 people applied for this marathon event from across the country with 12000 actually standing at the starting line and a completion rate of 85 percent meaning 10200 people successfully finished the long journey of 42.195 kilometers",
+  "Looking at our country's educational status there are 6 years of elementary school 3 years of middle school and 3 years of high school totaling 12 years of compulsory education with university enrollment rates at about 70 percent and over 500000 students entering universities each year",
+  "This research project is scheduled to run for 5 years with 20 billion won in phase 1 35 billion won in phase 2 and 45 billion won in phase 3 totaling 100 billion won in budget with 50 researchers and 100 support staff participating",
+  "Our city has an area of 1200 square kilometers with a population of 3.8 million residents average income per capita of 45 million won and unemployment rate of 3.2 percent which is lower than the national average of 3.8 percent",
+  "This building began construction in 2018 and was completed in 2022 with 45 floors above ground and 6 underground totaling 51 floors at a height of 203 meters with a total floor area of 150000 square meters accommodating 3000 people working simultaneously",
+  "Looking at this year's first half performance Q1 sales were 125 billion won and Q2 sales were 138 billion won growing 12 percent and 15 percent respectively compared to the same period last year with operating profit margin at 18 percent recording the industry's highest level",
+  "This festival will run for 11 days from October 15 to October 25 with an expected 2 million visitors 150 booths installed and 1000 artists from 50 countries participating to present over 300 performances",
+  "Our school opened in 1965 celebrating its 59th anniversary this year having produced 85000 graduates with currently 2500 students and 150 faculty members and 35 clubs actively operating",
+  "This product took 3 years to develop completed after over 500 tests weighing 250 grams measuring 15 centimeters with battery life of 72 hours and priced at 89000 won",
+];

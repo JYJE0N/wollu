@@ -1,15 +1,19 @@
 import { TypingSessionEntity } from '@/domain/entities/TypingSession';
-import { ITextRepository } from '@/domain/repositories/ITextRepository';
+import { ITextRepository, SentenceLength, SentenceVariant } from '@/domain/repositories/ITextRepository';
 
 export class StartTypingSessionUseCase {
   constructor(private textRepository: ITextRepository) {}
 
-  execute(mode: 'sentence' | 'words', difficulty?: 'easy' | 'medium' | 'hard'): TypingSessionEntity {
+  execute(
+    mode: 'sentence' | 'words', 
+    length: SentenceLength = 'short',
+    variant: SentenceVariant = 'basic'
+  ): TypingSessionEntity {
     const sessionId = this.generateSessionId();
     let text: string;
 
     if (mode === 'sentence') {
-      text = this.textRepository.getRandomSentence(difficulty);
+      text = this.textRepository.getRandomSentence(length, variant);
     } else {
       text = this.textRepository.getRandomWords(10);
     }

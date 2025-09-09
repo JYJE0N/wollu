@@ -1,6 +1,6 @@
 import { TypingSessionEntity } from '@/domain/entities/TypingSession';
 import { TypingStats } from '@/domain/valueObjects/TypingStats';
-import { ITextRepository } from '@/domain/repositories/ITextRepository';
+import { ITextRepository, SentenceLength, SentenceVariant } from '@/domain/repositories/ITextRepository';
 import { IStorageService } from '@/infrastructure/services/StorageService';
 import { StartTypingSessionUseCase } from '../usecases/StartTypingSessionUseCase';
 import { UpdateTypingInputUseCase } from '../usecases/UpdateTypingInputUseCase';
@@ -19,8 +19,12 @@ export class TypingSessionService {
     this.loadSession();
   }
 
-  startNewSession(mode: 'sentence' | 'words', difficulty?: 'easy' | 'medium' | 'hard'): TypingSessionEntity {
-    this.currentSession = this.startSessionUseCase.execute(mode, difficulty);
+  startNewSession(
+    mode: 'sentence' | 'words', 
+    length: SentenceLength = 'short',
+    variant: SentenceVariant = 'basic'
+  ): TypingSessionEntity {
+    this.currentSession = this.startSessionUseCase.execute(mode, length, variant);
     this.saveSession();
     return this.currentSession;
   }

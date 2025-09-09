@@ -46,7 +46,7 @@ src/
 
 ### 핵심 원칙
 - **의존성 역전**: 내부 계층이 외부 계층에 의존하지 않음
-- **DI Container**: `/src/infrastructure/container/DIContainer.ts`를 통한 의존성 주입
+- **DI Container**: `/src/infrastructure/di/DIContainer.ts`를 통한 의존성 주입
 - **인터페이스 우선**: 도메인 계층에서 인터페이스 정의, 인프라에서 구현
 
 ## 주요 기술 스택
@@ -74,8 +74,8 @@ src/
 
 ### 상태 관리
 - **메인 Store**: `/src/store/typingStore.ts`
-- **간단 모드**: `/src/store/simpleTypingStore.ts`
-- **고급 모드**: `/src/store/enhancedTypingStore.ts`
+- **간단 모드**: `/src/store/simpleTypingStore.ts.bak`
+- **고급 모드**: `/src/store/enhancedTypingStore.ts.bak`
 - Zustand 기반, 액션과 상태 분리
 
 ### 타입 안전성
@@ -90,7 +90,7 @@ src/
 
 ### 순환 참조 방지
 - 계층별 단방향 의존성 유지
-- DI Container를 통한 의존성 주입 (`/src/infrastructure/di/DIContainer.ts`)
+- DI Container를 통한 의존성 주입
 - 인터페이스를 통한 느슨한 결합
 
 ## 디렉토리별 역할
