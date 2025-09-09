@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, TrendingUp, Clock, Target, Keyboard } from 'lucide-react';
 import { Language } from '@/data/languages';
@@ -126,11 +126,11 @@ export const TypingEngine = React.forwardRef<
     onTypingStateChange(isStarted && !isPaused);
   }, [isStarted, isPaused, onTypingStateChange]);
 
-  // 오타 및 정확한 문자 계산을 통합
-  const calculateStats = useCallback(() => {
-    const errorMap: Record<number, boolean> = {};
-    let correct = 0;
-    let errors = 0;
+  // 오타 및 정확한 문자 계산을 useMemo로 최적화
+  const { correct, errors, errorMap } = useMemo(() => {
+    const errorMapResult: Record<number, boolean> = {};
+    let correctCount = 0;
+    let errorCount = 0;
     
     for (let i = 0; i < userInput.length; i++) {
       // 조합 중인 마지막 글자는 오타 판정에서 제외
@@ -138,24 +138,23 @@ export const TypingEngine = React.forwardRef<
         continue;
       }
       if (i < targetText.length && userInput[i] === targetText[i]) {
-        correct++;
+        correctCount++;
       } else {
-        errors++;
-        errorMap[i] = true;
+        errorCount++;
+        errorMapResult[i] = true;
       }
     }
     
-    return { correct, errors, errorMap };
+    return { correct: correctCount, errors: errorCount, errorMap: errorMapResult };
   }, [userInput, targetText, isComposing]);
 
   useEffect(() => {
-    const { correct, errors } = calculateStats();
     setStats(prev => ({
       ...prev,
       correctChars: correct,
       errors: errors,
     }));
-  }, [calculateStats]);
+  }, [correct, errors]);
 
   // Just focus without auto-starting timer
   const handleInputFocus = () => {
@@ -173,7 +172,7 @@ export const TypingEngine = React.forwardRef<
     // }
   };
 
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     setUserInput('');
     setIsStarted(false);
     setIsPaused(false);
@@ -194,7 +193,7 @@ export const TypingEngine = React.forwardRef<
     setTimeout(() => {
       inputRef.current?.focus();
     }, 100);
-  };
+  }, [resetComposition]);
 
   const handleNewText = () => {
     handleReset();
@@ -227,7 +226,7 @@ export const TypingEngine = React.forwardRef<
     }
   }, [userInput, isStarted, isCompleted, targetText.length]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newInput = e.target.value;
     
     // Auto-start timer on first character (critical for WPM accuracy)
@@ -249,10 +248,7 @@ export const TypingEngine = React.forwardRef<
     if (!isCompleted && newInput.length <= targetText.length) {
       setUserInput(newInput);
     }
-  };
-
-  // errors 객체는 calculateStats에서 생성됨
-  const { errorMap: errors } = calculateStats();
+  }, [isStarted, isCompleted, targetText.length, userInput, resetComposition]);
 
 
   const formatTime = (seconds: number) => {
@@ -340,8 +336,8 @@ export const TypingEngine = React.forwardRef<
       // 도메인에서 계산된 WPM으로 덮어쓰기
       finalWpm = finalDomainStats.wpm;
       
-      // calculateStats를 재사용하여 정확도 계산
-      const { correct, errors } = calculateStats();
+      // 직접 correct와 errors 값을 사용하여 정확도 계산
+      // const { correct, errors } = calculateStats();
       
       const accuracy = targetText.length > 0 
         ? Math.round((correct / targetText.length) * 100)
@@ -460,7 +456,7 @@ export const TypingEngine = React.forwardRef<
               currentIndex={userInput.length}
               isComposing={isComposing}
               composingChar={composingChar}
-              errors={errors}
+              errors={errorMap}
               language={currentLanguage}
               showCursor={!isCompleted}
               highlightCurrent={!isCompleted}

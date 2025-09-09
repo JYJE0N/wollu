@@ -4,7 +4,7 @@ export * from './medium';
 export * from './long';
 
 import { allKoreanShortSentences } from './short';
-import { allKoreanMediumSentences } from './medium';
+import { allKoreanMediumSentences } from './medium/index';
 import { allKoreanLongSentences } from './long';
 
 // 길이별 분류

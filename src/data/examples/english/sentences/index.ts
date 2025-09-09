@@ -4,7 +4,7 @@ export * from './medium';
 export * from './long';
 
 import { allEnglishShortSentences } from './short';
-import { allEnglishMediumSentences } from './medium';
+import { allEnglishMediumSentences } from './medium/index';
 import { allEnglishLongSentences } from './long';
 
 // Sentences by length

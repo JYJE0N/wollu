@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { ToastProvider } from '@/components/ToastProvider';
 import { TypingPracticeView } from './TypingPracticeView';
@@ -38,7 +38,7 @@ export default function App() {
   }, [currentLanguage]);
 
 
-  const handleNewText = (showToast: boolean = true) => {
+  const handleNewText = useCallback((showToast: boolean = true) => {
     const newText = practiceMode === 'sentence' 
       ? textRepository.getSentenceByTypeAndVariant(sentenceType, sentenceVariant)
       : textRepository.getRandomWords(wordCount);
@@ -49,9 +49,9 @@ export default function App() {
         : `New ${practiceMode === 'sentence' ? 'sentence' : 'word'} practice!`;
       toast.success(message);
     }
-  };
+  }, [practiceMode, sentenceType, sentenceVariant, wordCount, currentLanguage, textRepository]);
 
-  const handleModeChange = (mode: 'sentence' | 'words') => {
+  const handleModeChange = useCallback((mode: 'sentence' | 'words') => {
     setPracticeMode(mode);
     const newText = mode === 'sentence' 
       ? textRepository.getSentenceByTypeAndVariant(sentenceType, sentenceVariant)
@@ -61,11 +61,11 @@ export default function App() {
       ? `${mode === 'sentence' ? '문장' : '단어'} 연습 모드로 변경!`
       : `Changed to ${mode === 'sentence' ? 'sentence' : 'word'} practice mode!`;
     toast.success(message);
-  };
+  }, [sentenceType, sentenceVariant, wordCount, currentLanguage, textRepository]);
 
   // difficulty 관련 핸들러는 더 이상 사용하지 않음
 
-  const handleLanguageChange = (language: Language) => {
+  const handleLanguageChange = useCallback((language: Language) => {
     setCurrentLanguage(language);
     textRepository.setLanguage(language);
     const newText = practiceMode === 'sentence' 
@@ -77,37 +77,37 @@ export default function App() {
       ? `언어 변경: ${languageName}`
       : `Language changed: ${languageName}`;
     toast.success(message);
-  };
+  }, [practiceMode, sentenceType, sentenceVariant, wordCount, currentLanguage, textRepository, availableLanguages]);
 
-  const handleLanguageToggle = () => {
+  const handleLanguageToggle = useCallback(() => {
     const newLanguage = currentLanguage === 'ko' ? 'en' : 'ko';
     handleLanguageChange(newLanguage);
-  };
+  }, [currentLanguage, handleLanguageChange]);
 
   // 세팅 패널 핸들러들
-  const handleWordCountChange = (count: number) => {
+  const handleWordCountChange = useCallback((count: number) => {
     setWordCount(count);
     if (practiceMode === 'words') {
       const newText = textRepository.getRandomWords(count);
       setCurrentText(newText);
     }
-  };
+  }, [practiceMode, textRepository]);
 
-  const handleSentenceTypeChange = (type: 'short' | 'medium' | 'long') => {
+  const handleSentenceTypeChange = useCallback((type: 'short' | 'medium' | 'long') => {
     setSentenceType(type);
     if (practiceMode === 'sentence') {
       const newText = textRepository.getSentenceByTypeAndVariant(type, sentenceVariant);
       setCurrentText(newText);
     }
-  };
+  }, [practiceMode, sentenceVariant, textRepository]);
 
-  const handleSentenceVariantChange = (variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => {
+  const handleSentenceVariantChange = useCallback((variant: 'basic' | 'punctuation' | 'numbers' | 'mixed') => {
     setSentenceVariant(variant);
     if (practiceMode === 'sentence') {
       const newText = textRepository.getSentenceByTypeAndVariant(sentenceType, variant);
       setCurrentText(newText);
     }
-  };
+  }, [practiceMode, sentenceType, textRepository]);
 
 
   return (
