@@ -1,9 +1,12 @@
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { TypingStats as DomainTypingStats } from '@/domain/valueObjects/TypingStats';
 
 export interface TypingStats {
-  wpm: number;
-  accuracy: number;
+  cpm: number;  // Characters Per Minute
+  wpm: number;  // Words Per Minute
+  accuracy: number;  // 입력한 글자 중 정확한 비율
+  completionRate: number;  // 전체 텍스트 중 완료한 비율
   totalCharacters: number;
   correctCharacters: number;
   incorrectCharacters: number;
@@ -26,6 +29,7 @@ export interface TypingState {
   
   // 전체 통계
   totalSessions: number;
+  bestCpm: number;
   bestWpm: number;
   bestAccuracy: number;
   totalTimeSpent: number;
@@ -41,8 +45,10 @@ export interface TypingState {
 }
 
 const initialStats: TypingStats = {
+  cpm: 0,
   wpm: 0,
   accuracy: 0,
+  completionRate: 0,
   totalCharacters: 0,
   correctCharacters: 0,
   incorrectCharacters: 0,
@@ -63,6 +69,7 @@ export const useTypingStore = create<TypingState>()(
       stats: initialStats,
       practiceMode: 'sentence',
       totalSessions: 0,
+      bestCpm: 0,
       bestWpm: 0,
       bestAccuracy: 0,
       totalTimeSpent: 0,
@@ -129,36 +136,41 @@ export const useTypingStore = create<TypingState>()(
           if (!state.startTime || !state.isStarted) return state;
 
           const timeElapsed = Math.floor((Date.now() - state.startTime) / 1000);
-          const totalCharacters = state.userInput.length;
-          const correctCharacters = state.userInput
-            .split('')
-            .filter((_, index) => !state.errors[index]).length;
-          const incorrectCharacters = totalCharacters - correctCharacters;
-          const accuracy = totalCharacters > 0 ? (correctCharacters / totalCharacters) * 100 : 0;
-          const timeInMinutes = timeElapsed / 60;
-          const wpm = timeInMinutes > 0 ? Math.round(correctCharacters / timeInMinutes) : 0;
+          
+          // 도메인 TypingStats를 사용하여 계산
+          const domainStats = DomainTypingStats.calculate(
+            state.currentText,
+            state.userInput,
+            timeElapsed
+          );
+
+          const incorrectCharacters = domainStats.totalChars - domainStats.correctChars;
 
           return {
             ...state,
             stats: {
-              wpm,
-              accuracy: Math.round(accuracy * 100) / 100,
-              totalCharacters,
-              correctCharacters,
+              cpm: domainStats.cpm,
+              wpm: domainStats.wpm,
+              accuracy: Math.round(domainStats.accuracy * 100) / 100,
+              completionRate: Math.round(domainStats.completionRate * 100) / 100,
+              totalCharacters: domainStats.totalChars,
+              correctCharacters: domainStats.correctChars,
               incorrectCharacters,
-              timeElapsed,
+              timeElapsed: domainStats.timeElapsed,
             },
           };
         }),
 
       completeSession: () =>
         set((state) => {
+          const newBestCpm = Math.max(state.bestCpm, state.stats.cpm);
           const newBestWpm = Math.max(state.bestWpm, state.stats.wpm);
           const newBestAccuracy = Math.max(state.bestAccuracy, state.stats.accuracy);
           
           return {
             ...state,
             totalSessions: state.totalSessions + 1,
+            bestCpm: newBestCpm,
             bestWpm: newBestWpm,
             bestAccuracy: newBestAccuracy,
             totalTimeSpent: state.totalTimeSpent + state.stats.timeElapsed,
