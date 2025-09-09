@@ -36,14 +36,14 @@ export class TypingStats {
     userInput: string,
     timeElapsed: number
   ): TypingStats {
-    // 한글 자모 분리하여 비교
+    // 한글 자모 분리하여 정확도 계산용
     const textJamos = disassemble(text);
     const inputJamos = disassemble(userInput);
     
     let correctJamos = 0;
     let errorCount = 0;
 
-    // 자모 단위로 비교
+    // 자모 단위로 비교 (정확도 계산용)
     for (let i = 0; i < Math.min(inputJamos.length, textJamos.length); i++) {
       if (inputJamos[i] === textJamos[i]) {
         correctJamos++;
@@ -52,7 +52,7 @@ export class TypingStats {
       }
     }
 
-    // 완성된 글자 단위로도 계산
+    // 완성된 글자 단위로 계산 (CPM 계산용)
     let correctCompleteChars = 0;
     const minLength = Math.min(userInput.length, text.length);
     for (let i = 0; i < minLength; i++) {
@@ -79,9 +79,9 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM 계산 - 정확한 자모 기준
+    // CPM 계산 - 완성된 글자 기준 (타 사이트와 동일)
     const cpm = timeElapsed > 0 
-      ? Math.round((correctJamos / timeElapsed) * 60) 
+      ? Math.round((correctCompleteChars / timeElapsed) * 60) 
       : 0;
     
     // WPM 계산 - 한국어는 보통 2.5글자당 1단어
@@ -93,8 +93,8 @@ export class TypingStats {
       accuracy,
       completionRate,
       timeElapsed,
-      correctJamos,
-      inputJamos.length,
+      correctCompleteChars,  // CPM과 일치하도록 완성글자 수 반환
+      userInput.length,
       errorCount
     );
   }
