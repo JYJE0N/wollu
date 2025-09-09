@@ -11,7 +11,8 @@
       "Read(//Users/roseline/Desktop/01_스크린샷/**)",
       "WebFetch(domain:typing.works)",
       "WebFetch(domain:monkeytype.com)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(node:*)"
     ],
     "deny": [],
     "ask": []

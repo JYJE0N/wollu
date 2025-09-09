@@ -7,6 +7,7 @@ import { Language } from '@/data/languages';
 import { getTextRepository, getHangulService } from '@/infrastructure/di/DIContainer';
 import TextRenderer from '@/presentation/components/Common/TextRenderer';
 import { useHangulComposition } from '@/presentation/hooks/useHangulComposition';
+import { TypingStats as DomainTypingStats } from '@/domain/valueObjects/TypingStats';
 
 interface TypingEngineProps {
   practiceMode: 'sentence' | 'words';
@@ -288,20 +289,16 @@ export const TypingEngine = React.forwardRef<
         // NaN 방지
         if (isNaN(wpm)) wpm = 0;
         
-        // CPM: 한글은 키 스트로크 기반, 영어는 글자 기반
-        let cpm = 0;
-        if (elapsedMinutes > 0) {
-          if (currentLanguage === 'ko') {
-            // 한글: 실제 키 입력 횟수 기반
-            cpm = Math.round(stats.keyStrokes / elapsedMinutes);
-          } else {
-            // 영어: 타이핑된 글자 수 기반
-            cpm = Math.round(charactersTyped / elapsedMinutes);
-          }
-        }
+        // 도메인 TypingStats를 사용한 정확한 CPM 계산
+        const domainStats = DomainTypingStats.calculate(
+          targetText,
+          userInput,
+          elapsedSeconds
+        );
         
-        // NaN 방지
-        if (isNaN(cpm)) cpm = 0;
+        const cpm = domainStats.cpm;
+        // 도메인에서 계산된 WPM으로 덮어쓰기
+        wpm = domainStats.wpm;
         
         // Accuracy: correct chars / total chars typed
         const accuracy = userInput.length > 0 
@@ -330,6 +327,8 @@ export const TypingEngine = React.forwardRef<
       // Calculate final speeds with exact completion time
       const completionTime = Date.now();
       const totalMinutes = (completionTime - startTime + pausedTime) / 60000;
+      const totalSeconds = (completionTime - startTime + pausedTime) / 1000;
+      
       let finalWpm = totalMinutes > 0 
         ? Math.round((targetText.length / 5) / totalMinutes)
         : 0;
@@ -337,20 +336,16 @@ export const TypingEngine = React.forwardRef<
       // NaN 방지
       if (isNaN(finalWpm)) finalWpm = 0;
       
-      // 최종 CPM: 한글은 키 스트로크 기반, 영어는 글자 기반
-      let finalCpm = 0;
-      if (totalMinutes > 0) {
-        if (currentLanguage === 'ko') {
-          // 한글: 실제 키 입력 횟수 기반
-          finalCpm = Math.round(stats.keyStrokes / totalMinutes);
-        } else {
-          // 영어: 완료된 글자 수 기반
-          finalCpm = Math.round(targetText.length / totalMinutes);
-        }
-      }
+      // 도메인 TypingStats를 사용한 최종 CPM 계산
+      const finalDomainStats = DomainTypingStats.calculate(
+        targetText,
+        userInput,
+        totalSeconds
+      );
       
-      // NaN 방지
-      if (isNaN(finalCpm)) finalCpm = 0;
+      const finalCpm = finalDomainStats.cpm;
+      // 도메인에서 계산된 WPM으로 덮어쓰기
+      finalWpm = finalDomainStats.wpm;
       
       // Calculate actual accuracy based on errors (직접 계산)
       let correct = 0;
