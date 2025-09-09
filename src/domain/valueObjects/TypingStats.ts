@@ -79,9 +79,10 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM 계산 - 완성된 글자 기준 (타 사이트와 동일)
+    // CPM 계산 - 총 입력한 글자 수 기준 (타 사이트와 동일)
+    // 정확도는 별도로 계산하고, CPM은 타이핑 속도 자체를 측정
     const cpm = timeElapsed > 0 
-      ? Math.round((correctCompleteChars / timeElapsed) * 60) 
+      ? Math.round((userInput.length / timeElapsed) * 60) 
       : 0;
     
     // WPM 계산 - 한국어는 보통 2.5글자당 1단어
@@ -93,7 +94,7 @@ export class TypingStats {
       accuracy,
       completionRate,
       timeElapsed,
-      correctCompleteChars,  // CPM과 일치하도록 완성글자 수 반환
+      userInput.length,  // CPM과 일치하도록 총 입력글자 수 반환
       userInput.length,
       errorCount
     );
@@ -129,9 +130,9 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM (Characters Per Minute) 계산
+    // CPM (Characters Per Minute) 계산 - 총 입력한 글자 수 기준
     const cpm = timeElapsed > 0 
-      ? Math.round((correctChars / timeElapsed) * 60) 
+      ? Math.round((userInput.length / timeElapsed) * 60) 
       : 0;
     
     // WPM (Words Per Minute) 계산 - 영어는 보통 5글자당 1단어
@@ -143,7 +144,7 @@ export class TypingStats {
       accuracy,
       completionRate,
       timeElapsed,
-      correctChars,
+      userInput.length,  // CPM과 일치하도록 총 입력글자 수 반환
       userInput.length,
       errorCount
     );
