@@ -155,7 +155,7 @@ export const TypingEngine = React.forwardRef<
       correctChars: correct,
       errors: errors,
     }));
-  }, [calculateCorrectChars]);
+  }, [calculateStats]);
 
   // Just focus without auto-starting timer
   const handleInputFocus = () => {
