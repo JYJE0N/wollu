@@ -79,11 +79,26 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM 계산 - 총 입력한 글자 수 기준 (타 사이트와 동일)
-    // 정확도는 별도로 계산하고, CPM은 타이핑 속도 자체를 측정
-    const cpm = timeElapsed > 0 
-      ? Math.round((userInput.length / timeElapsed) * 60) 
+    // CPM 계산 - 관대한 보정 적용
+    // 1. 기본 CPM: 총 입력 글자 수 기준
+    // 2. 한국어 보정: 자모 조합의 복잡성 고려하여 1.2배 보정
+    // 3. 완성도 보너스: 완료율에 따른 추가 보정
+    let baseCpm = timeElapsed > 0 
+      ? (userInput.length / timeElapsed) * 60 
       : 0;
+    
+    // 한국어 자모 조합 복잡성 보정 (1.2배)
+    baseCpm *= 1.2;
+    
+    // 완료율 보너스 (완료율이 높을수록 추가 보정)
+    const completionBonus = Math.min(completionRate / 100 * 0.1, 0.1); // 최대 10% 보너스
+    
+    // 정확도 보너스 (정확도가 높을 때 추가 보정)
+    const accuracyBonus = accuracy > 95 ? 0.05 : 0; // 95% 이상 정확도 시 5% 보너스
+    
+    baseCpm *= (1 + completionBonus + accuracyBonus);
+    
+    const cpm = Math.round(baseCpm);
     
     // WPM 계산 - 한국어는 보통 2.5글자당 1단어
     const wpm = Math.round(cpm / 2.5);
@@ -130,10 +145,23 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM (Characters Per Minute) 계산 - 총 입력한 글자 수 기준
-    const cpm = timeElapsed > 0 
-      ? Math.round((userInput.length / timeElapsed) * 60) 
+    // CPM (Characters Per Minute) 계산 - 관대한 보정 적용
+    let baseCpm = timeElapsed > 0 
+      ? (userInput.length / timeElapsed) * 60 
       : 0;
+    
+    // 영어 타이핑 보정 (1.1배 - 한국어보다 적은 보정)
+    baseCpm *= 1.1;
+    
+    // 완료율 보너스
+    const completionBonus = Math.min(completionRate / 100 * 0.1, 0.1);
+    
+    // 정확도 보너스 (정확도가 높을 때 추가 보정)
+    const accuracyBonus = accuracy > 95 ? 0.05 : 0; // 95% 이상 정확도 시 5% 보너스
+    
+    baseCpm *= (1 + completionBonus + accuracyBonus);
+    
+    const cpm = Math.round(baseCpm);
     
     // WPM (Words Per Minute) 계산 - 영어는 보통 5글자당 1단어
     const wpm = Math.round(cpm / 5);
