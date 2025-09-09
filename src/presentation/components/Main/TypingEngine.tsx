@@ -126,11 +126,14 @@ export const TypingEngine = React.forwardRef<
     onTypingStateChange(isStarted && !isPaused);
   }, [isStarted, isPaused, onTypingStateChange]);
 
-  const calculateCorrectChars = useCallback(() => {
+  // 오타 및 정확한 문자 계산을 통합
+  const calculateStats = useCallback(() => {
+    const errorMap: Record<number, boolean> = {};
     let correct = 0;
     let errors = 0;
+    
     for (let i = 0; i < userInput.length; i++) {
-      // 조합 중인 마지막 글자는 정확도 계산에서 제외
+      // 조합 중인 마지막 글자는 오타 판정에서 제외
       if (isComposing && i === userInput.length - 1) {
         continue;
       }
@@ -138,13 +141,15 @@ export const TypingEngine = React.forwardRef<
         correct++;
       } else {
         errors++;
+        errorMap[i] = true;
       }
     }
-    return { correct, errors };
+    
+    return { correct, errors, errorMap };
   }, [userInput, targetText, isComposing]);
 
   useEffect(() => {
-    const { correct, errors } = calculateCorrectChars();
+    const { correct, errors } = calculateStats();
     setStats(prev => ({
       ...prev,
       correctChars: correct,
@@ -246,20 +251,8 @@ export const TypingEngine = React.forwardRef<
     }
   };
 
-  // 오류 상태를 추적하기 위한 errors 객체 생성
-  const errors = useCallback(() => {
-    const errorMap: Record<number, boolean> = {};
-    for (let i = 0; i < userInput.length; i++) {
-      // 조합 중인 마지막 글자는 오타 판정에서 제외
-      if (isComposing && i === userInput.length - 1) {
-        continue;
-      }
-      if (i < targetText.length && userInput[i] !== targetText[i]) {
-        errorMap[i] = true;
-      }
-    }
-    return errorMap;
-  }, [userInput, targetText, isComposing])();
+  // errors 객체는 calculateStats에서 생성됨
+  const { errorMap: errors } = calculateStats();
 
 
   const formatTime = (seconds: number) => {
@@ -347,20 +340,8 @@ export const TypingEngine = React.forwardRef<
       // 도메인에서 계산된 WPM으로 덮어쓰기
       finalWpm = finalDomainStats.wpm;
       
-      // Calculate actual accuracy based on errors (직접 계산)
-      let correct = 0;
-      let errors = 0;
-      for (let i = 0; i < userInput.length; i++) {
-        // 조합 중인 마지막 글자는 정확도 계산에서 제외
-        if (isComposing && i === userInput.length - 1) {
-          continue;
-        }
-        if (i < targetText.length && userInput[i] === targetText[i]) {
-          correct++;
-        } else {
-          errors++;
-        }
-      }
+      // calculateStats를 재사용하여 정확도 계산
+      const { correct, errors } = calculateStats();
       
       const accuracy = targetText.length > 0 
         ? Math.round((correct / targetText.length) * 100)
