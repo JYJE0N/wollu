@@ -79,24 +79,16 @@ export class TypingStats {
       ? (userInput.length / text.length) * 100 
       : 0;
     
-    // CPM 계산 - 관대한 보정 적용
-    // 1. 기본 CPM: 총 입력 글자 수 기준
-    // 2. 한국어 보정: 자모 조합의 복잡성 고려하여 1.2배 보정
-    // 3. 완성도 보너스: 완료율에 따른 추가 보정
+    // CPM 계산 - 한국어 자모 기준 (타 사이트와 동일)
+    // 한국어는 자모 분해하여 계산 (예: '한' = 'ㅎ'+'ㅏ'+'ㄴ' = 3글자)
+    // inputJamos는 이미 위에서 정의됨
+    
     let baseCpm = timeElapsed > 0 
-      ? (userInput.length / timeElapsed) * 60 
+      ? (inputJamos.length / timeElapsed) * 60 
       : 0;
     
-    // 한국어 자모 조합 복잡성 보정 (1.2배)
-    baseCpm *= 1.2;
-    
-    // 완료율 보너스 (완료율이 높을수록 추가 보정)
-    const completionBonus = Math.min(completionRate / 100 * 0.1, 0.1); // 최대 10% 보너스
-    
-    // 정확도 보너스 (정확도가 높을 때 추가 보정)
-    const accuracyBonus = accuracy > 95 ? 0.05 : 0; // 95% 이상 정확도 시 5% 보너스
-    
-    baseCpm *= (1 + completionBonus + accuracyBonus);
+    // 타이핑 사이트 일반적 보정 (1.1배)
+    baseCpm *= 1.1;
     
     const cpm = Math.round(baseCpm);
     
@@ -109,7 +101,7 @@ export class TypingStats {
       accuracy,
       completionRate,
       timeElapsed,
-      userInput.length,  // CPM과 일치하도록 총 입력글자 수 반환
+      inputJamos.length,  // CPM과 일치하도록 자모 수 반환
       userInput.length,
       errorCount
     );
