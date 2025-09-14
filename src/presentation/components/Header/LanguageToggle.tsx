@@ -25,18 +25,18 @@ export const LanguageToggle = memo<LanguageToggleProps>(({
       aria-checked={isKorean}
       aria-label={`Switch language to ${isKorean ? 'English' : 'Korean'}`}
     >
-      <span 
-        className="absolute left-3 text-xs font-semibold text-white pointer-events-none select-none transition-opacity duration-200"
+      <div
+        className="absolute left-0 w-1/2 h-full flex items-center justify-center text-xs font-semibold text-white pointer-events-none select-none transition-opacity duration-200"
         style={{ opacity: !isKorean ? 1 : 0.3 }}
       >
         EN
-      </span>
-      <span 
-        className="absolute right-2.5 text-xs font-semibold text-white pointer-events-none select-none transition-opacity duration-200"
+      </div>
+      <div
+        className="absolute right-0 w-1/2 h-full flex items-center justify-center text-xs font-semibold text-white pointer-events-none select-none transition-opacity duration-200"
         style={{ opacity: isKorean ? 1 : 0.3 }}
       >
         한글
-      </span>
+      </div>
       
       <motion.span
         className="absolute h-7 w-7 rounded-full bg-white shadow-md flex items-center justify-center"

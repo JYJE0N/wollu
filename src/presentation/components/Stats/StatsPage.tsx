@@ -2,17 +2,18 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  TrendingUp, 
-  Target, 
-  Clock, 
-  Keyboard, 
-  Award, 
+import {
+  TrendingUp,
+  Target,
+  Clock,
+  Keyboard,
+  Award,
   BarChart3,
   Calendar,
   Zap,
   Trophy,
-  Crown
+  Crown,
+  Medal
 } from 'lucide-react';
 import { getUserStatsService } from '@/infrastructure/di/DIContainer';
 import { UserStats } from '@/domain/entities/UserStats';
@@ -26,6 +27,10 @@ export default function StatsPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<'daily' | 'weekly' | 'monthly'>('weekly');
   const [selectedLanguage, setSelectedLanguage] = useState<'all' | 'ko' | 'en'>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'stats' | 'leaderboard'>('stats');
+  const [leaderboard, setLeaderboard] = useState<UserStats[]>([]);
+  const [leaderboardSortBy, setLeaderboardSortBy] = useState<'wpm' | 'cpm' | 'accuracy' | 'totalSessions'>('wpm');
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
 
   const userStatsService = getUserStatsService();
   const userId = 'default_user'; // 임시 사용자 ID
@@ -33,6 +38,12 @@ export default function StatsPage() {
   useEffect(() => {
     loadUserStats();
   }, []);
+
+  useEffect(() => {
+    if (activeTab === 'leaderboard') {
+      loadLeaderboard();
+    }
+  }, [activeTab, leaderboardSortBy, selectedLanguage]);
 
   const loadUserStats = async () => {
     try {
@@ -43,6 +54,18 @@ export default function StatsPage() {
       console.error('Failed to load user stats:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const loadLeaderboard = async () => {
+    try {
+      setIsLeaderboardLoading(true);
+      const data = await userStatsService.getLeaderboard(leaderboardSortBy, selectedLanguage as any, 50);
+      setLeaderboard(data);
+    } catch (error) {
+      console.error('Failed to load leaderboard:', error);
+    } finally {
+      setIsLeaderboardLoading(false);
     }
   };
 
@@ -121,50 +144,121 @@ export default function StatsPage() {
           {/* 페이지 헤더 */}
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              <BarChart3 className="inline-block mr-3 mb-1" />
-              나의 타이핑 통계
+              {activeTab === 'stats' ? (
+                <><BarChart3 className="inline-block mr-3 mb-1" />나의 타이핑 통계</>
+              ) : (
+                <><Trophy className="inline-block mr-3 mb-1" />리더보드</>
+              )}
             </h1>
             <p className="text-lg text-gray-600">
-              연습 기록과 성과를 확인해보세요
+              {activeTab === 'stats'
+                ? '연습 기록과 성과를 확인해보세요'
+                : '다른 사용자들과 실력을 비교해보세요'
+              }
             </p>
+
+            {/* 탭 네비게이션 */}
+            <div className="flex justify-center mt-6">
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                <button
+                  onClick={() => setActiveTab('stats')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'stats'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  내 통계
+                </button>
+                <button
+                  onClick={() => setActiveTab('leaderboard')}
+                  className={`px-6 py-2 rounded-md text-sm font-medium transition-colors ${
+                    activeTab === 'leaderboard'
+                      ? 'bg-blue-500 text-white'
+                      : 'text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  리더보드
+                </button>
+              </div>
+            </div>
           </div>
 
           {/* 필터 옵션 */}
-          <div className="flex flex-wrap justify-center gap-4 mb-8">
-            <div className="flex bg-white rounded-lg p-1 shadow-sm">
-              {(['daily', 'weekly', 'monthly'] as const).map((period) => (
-                <button
-                  key={period}
-                  onClick={() => setSelectedPeriod(period)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    selectedPeriod === period
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {period === 'daily' ? '일간' : period === 'weekly' ? '주간' : '월간'}
-                </button>
-              ))}
-            </div>
+          {activeTab === 'stats' && (
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                {(['daily', 'weekly', 'monthly'] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setSelectedPeriod(period)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      selectedPeriod === period
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {period === 'daily' ? '일간' : period === 'weekly' ? '주간' : '월간'}
+                  </button>
+                ))}
+              </div>
 
-            <div className="flex bg-white rounded-lg p-1 shadow-sm">
-              {(['all', 'ko', 'en'] as const).map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => setSelectedLanguage(lang)}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    selectedLanguage === lang
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
-                >
-                  {lang === 'all' ? '전체' : lang === 'ko' ? '한글' : '영어'}
-                </button>
-              ))}
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                {(['all', 'ko', 'en'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      selectedLanguage === lang
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {lang === 'all' ? '전체' : lang === 'ko' ? '한글' : '영어'}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
-          {userStats ? (
+          {/* 리더보드 필터 옵션 */}
+          {activeTab === 'leaderboard' && (
+            <div className="flex flex-wrap justify-center gap-4 mb-8">
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                {(['wpm', 'cpm', 'accuracy', 'totalSessions'] as const).map((sort) => (
+                  <button
+                    key={sort}
+                    onClick={() => setLeaderboardSortBy(sort)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      leaderboardSortBy === sort
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {sort === 'wpm' ? 'WPM' : sort === 'cpm' ? 'CPM' : sort === 'accuracy' ? '정확도' : '연습 횟수'}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex bg-white rounded-lg p-1 shadow-sm">
+                {(['all', 'ko', 'en'] as const).map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => setSelectedLanguage(lang)}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      selectedLanguage === lang
+                        ? 'bg-blue-500 text-white'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {lang === 'all' ? '전체' : lang === 'ko' ? '한글' : '영어'}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {activeTab === 'stats' && userStats ? (
             <div className="space-y-8">
               {/* 티어 정보 카드 */}
               {currentTierInfo && (
@@ -402,12 +496,12 @@ export default function StatsPage() {
                     )}
                   </div>
                   <div className="mt-4">
-                    <a 
-                      href="/leaderboard"
+                    <button
+                      onClick={() => setActiveTab('leaderboard')}
                       className="text-blue-600 hover:text-blue-800 text-sm font-medium"
                     >
                       전체 순위 보기 →
-                    </a>
+                    </button>
                   </div>
                 </motion.div>
 
@@ -447,18 +541,92 @@ export default function StatsPage() {
               </div>
             </div>
             </div>
-          ) : (
+          ) : activeTab === 'stats' ? (
             <div className="text-center py-12">
               <p className="text-gray-600">통계 데이터가 없습니다.</p>
               <p className="text-sm text-gray-500 mt-2">
                 타이핑 연습을 시작해보세요!
               </p>
-              <a 
+              <a
                 href="/"
                 className="inline-block mt-4 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 연습 시작하기
               </a>
+            </div>
+          ) : null}
+
+          {/* 리더보드 탭 */}
+          {activeTab === 'leaderboard' && (
+            <div className="space-y-8">
+              {isLeaderboardLoading ? (
+                <div className="text-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                  <p className="text-gray-600">리더보드를 불러오는 중...</p>
+                </div>
+              ) : (
+                <motion.div
+                  className="bg-white rounded-xl shadow-lg overflow-hidden"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <div className="px-6 py-4 bg-gradient-to-r from-yellow-400 to-orange-500">
+                    <h3 className="text-lg font-semibold text-white flex items-center">
+                      <Trophy className="w-5 h-5 mr-2" />
+                      {leaderboardSortBy === 'wpm' ? 'WPM' :
+                       leaderboardSortBy === 'cpm' ? 'CPM' :
+                       leaderboardSortBy === 'accuracy' ? '정확도' : '연습 횟수'} 순위
+                    </h3>
+                  </div>
+                  <div className="divide-y divide-gray-200">
+                    {leaderboard.map((user, index) => (
+                      <div key={user.userId} className="px-6 py-4 flex items-center justify-between hover:bg-gray-50">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${
+                            index === 0 ? 'bg-yellow-500 text-white' :
+                            index === 1 ? 'bg-gray-400 text-white' :
+                            index === 2 ? 'bg-orange-600 text-white' :
+                            'bg-gray-100 text-gray-600'
+                          }`}>
+                            {index < 3 ? (
+                              index === 0 ? <Crown className="w-4 h-4" /> :
+                              index === 1 ? <Medal className="w-4 h-4" /> :
+                              <Award className="w-4 h-4" />
+                            ) : (
+                              index + 1
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-gray-900">
+                              {user.username || `사용자 #${user.userId}`}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                              {user.currentTier} 티어
+                            </p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-bold text-gray-900">
+                            {leaderboardSortBy === 'wpm' ? `${user.bestWpm} WPM` :
+                             leaderboardSortBy === 'cpm' ? `${user.bestCpm} CPM` :
+                             leaderboardSortBy === 'accuracy' ? `${Math.round(user.bestAccuracy)}%` :
+                             `${user.totalSessions}회`}
+                          </p>
+                          <p className="text-sm text-gray-500">
+                            {selectedLanguage === 'ko' ? '한글' : selectedLanguage === 'en' ? '영어' : '전체'}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                    {leaderboard.length === 0 && (
+                      <div className="px-6 py-8 text-center text-gray-500">
+                        리더보드 데이터가 없습니다.
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
         </motion.div>

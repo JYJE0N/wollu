@@ -95,7 +95,7 @@ export default function App() {
   return (
     <>
       <ToastProvider />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
         <Header
           currentLanguage={currentLanguage}
           currentTheme={theme}

@@ -127,19 +127,19 @@ export const MainContent: React.FC<MainContentProps> = ({
   }, [isTypingActive, escPressCount, escTimer]);
 
   return (
-    <motion.main 
-      className="flex-1 min-h-0 bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-slate-800"
+    <motion.main
+      className="flex-1 min-h-0"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.6 }}
     >
-      <div className="h-full max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-full flex flex-col py-8">
+      <div className="h-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="h-full flex flex-col py-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2, duration: 0.5 }}
-            className="mb-8"
+            className="mb-6"
           >
             <QuickActions
               practiceMode={practiceMode}

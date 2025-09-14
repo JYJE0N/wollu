@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { RotateCcw, TrendingUp, Clock, Target, Keyboard } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Language } from '@/data/languages';
 import { getTextRepository, getHangulService, getUserStatsService } from '@/infrastructure/di/DIContainer';
 import TextRenderer from '@/presentation/components/Common/TextRenderer';
@@ -33,6 +34,7 @@ export const TypingEngine = React.forwardRef<
   { focusInput: () => void; restart: () => void; loadNewText: () => void; pause: () => void; resume: () => void; quit: () => void },
   TypingEngineProps
 >(({ practiceMode, wordCount, sentenceType, sentenceVariant, currentLanguage, onTypingStateChange }, ref) => {
+  const router = useRouter();
   const [targetText, setTargetText] = useState('');
   const [userInput, setUserInput] = useState('');
   const [isStarted, setIsStarted] = useState(false);
@@ -56,12 +58,6 @@ export const TypingEngine = React.forwardRef<
     correctChars: 0,
     errors: 0,
     keyStrokes: 0,
-  });
-  const [speedDisplayMode, setSpeedDisplayMode] = useState<'wpm' | 'cpm'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('speedDisplayMode') as 'wpm' | 'cpm') || 'wpm';
-    }
-    return 'wpm';
   });
 
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -111,7 +107,6 @@ export const TypingEngine = React.forwardRef<
     },
   }));
   const textRepository = getTextRepository();
-  const hangulService = getHangulService();
   const userStatsService = getUserStatsService();
 
   useEffect(() => {
@@ -196,11 +191,6 @@ export const TypingEngine = React.forwardRef<
     }, 100);
   }, [resetComposition]);
 
-  const handleNewText = () => {
-    handleReset();
-    // Trigger parent to get new text
-    // This would need to be passed as a prop
-  };
 
   // 완료 조건: 타겟 텍스트의 길이에 도달하고, 한글의 경우 조합 중이 아닐 때 완료
   const isCompleted = userInput.length >= targetText.length && !isComposing;
@@ -373,182 +363,207 @@ export const TypingEngine = React.forwardRef<
       }).catch(error => {
         console.error('Failed to record session stats:', error);
       });
+
+      // 2초 후 통계 페이지로 자동 이동
+      setTimeout(() => {
+        router.push('/stats');
+      }, 2000);
     }
-  }, [isCompleted, isStarted, startTime, pausedTime, targetText, userInput, isComposing, onTypingStateChange, correct, errors, stats, currentLanguage, practiceMode, userStatsService]);
+  }, [isCompleted, isStarted, startTime, pausedTime, targetText, userInput, isComposing, onTypingStateChange, correct, errors, stats, currentLanguage, practiceMode, userStatsService, router]);
 
   return (
     <div className="h-full flex flex-col">
       <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="p-6 border-b border-gray-200 dark:border-gray-700">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-6">
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="w-5 h-5 text-blue-500" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isStarted ? (speedDisplayMode === 'wpm' ? stats.wpm : stats.cpm) : '--'}
-                  </div>
-                  <button
-                    onClick={() => {
-                      const newMode = speedDisplayMode === 'wpm' ? 'cpm' : 'wpm';
-                      setSpeedDisplayMode(newMode);
-                      if (typeof window !== 'undefined') {
-                        localStorage.setItem('speedDisplayMode', newMode);
-                      }
-                    }}
-                    className="text-xs px-2 py-0.5 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-600 dark:hover:text-blue-400 rounded transition-all cursor-pointer font-medium"
-                    title={currentLanguage === 'ko' ? '클릭하여 WPM/CPM 전환' : 'Click to toggle WPM/CPM'}
-                  >
-                    {speedDisplayMode.toUpperCase()} ⇄
-                  </button>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-green-500" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isStarted ? `${stats.accuracy}%` : '--'}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {currentLanguage === 'ko' ? '정확도' : 'Accuracy'}
-                  </div>
-                </div>
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Clock className="w-5 h-5 text-amber-500" />
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {isStarted ? formatTime(stats.elapsed) : '--:--'}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {currentLanguage === 'ko' ? '시간' : 'Time'}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              {isCompleted ? (
-                <>
-                  <motion.button
-                    onClick={handleReset}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white rounded-lg shadow-lg transition-all"
-                  >
-                    <RotateCcw className="w-4 h-4" />
-                    <span className="text-sm font-medium">
-                      {currentLanguage === 'ko' ? '다시 시작' : 'Try Again'}
-                    </span>
-                  </motion.button>
-                </>
-              ) : (
-                <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
-                  <Keyboard className="w-4 h-4" />
-                  <span>
-                    {!isStarted 
-                      ? (currentLanguage === 'ko' ? '준비되면 타이핑을 시작하세요 (첫 글자부터 타이머 시작)' : 'Start typing when ready (timer begins with first character)')
-                      : isPaused
-                      ? (currentLanguage === 'ko' ? '일시정지됨 - Space로 재개' : 'Paused - Press Space to resume')
-                      : (currentLanguage === 'ko' ? '타이핑 중...' : 'Typing...')
-                    }
-                  </span>
-                  {isPaused && (
-                    <motion.div
-                      animate={{ opacity: [1, 0.3, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5 }}
-                      className="w-2 h-2 bg-amber-500 rounded-full"
-                    />
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-1 p-6 flex flex-col">
-          <div className="flex-1 bg-gray-50 dark:bg-gray-900 rounded-lg p-6 mb-6 overflow-y-auto">
-            <TextRenderer
-              text={targetText}
-              userInput={userInput}
-              currentIndex={userInput.length}
-              isComposing={isComposing}
-              composingChar={composingChar}
-              errors={errorMap}
-              language={currentLanguage}
-              showCursor={!isCompleted}
-              highlightCurrent={!isCompleted}
-              showSpaces={true}
-            />
-          </div>
-
-          <div className="relative">
-            {/* 투명한 입력 필드 - IME 조합 과정 숨김 */}
-            <textarea
-              ref={inputRef}
-              value={userInput}
-              onChange={handleInputChange}
-              onKeyDown={handleKeyDown}
-              onFocus={handleInputFocus}
-              onBlur={handleInputBlur}
-              onCompositionStart={handleCompositionStart}
-              onCompositionUpdate={handleCompositionUpdate}
-              onCompositionEnd={(e) => handleCompositionEnd(e, handleCompositionComplete)}
-              disabled={isCompleted}
-              placeholder=""
-              style={{
-                color: 'transparent',
-                backgroundColor: 'transparent',
-                caretColor: 'transparent',
-                textShadow: 'none',
-                WebkitTextFillColor: 'transparent',
-                WebkitUserSelect: 'none',
-                userSelect: 'none',
-                outline: 'none',
-                border: 'none'
-              }}
-              className="absolute inset-0 w-full h-32 p-4 text-lg font-mono resize-none z-10 typing-area"
-            />
-            
-            {/* 시각적 입력 필드 - 실제 보이는 부분 */}
-            <div className="w-full h-32 p-4 bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-lg font-mono overflow-y-auto focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 dark:focus-within:ring-blue-400 transition-all hover:border-blue-400 dark:hover:border-blue-500">
-              {userInput || (
-                <span className="text-gray-400 dark:text-gray-500">
-                  {currentLanguage === 'ko' 
-                    ? '텍스트를 읽고 준비되면 타이핑을 시작하세요...' 
-                    : 'Read the text above, then start typing when ready...'}
+        <div className="p-4">
+          {/* 메인 프로그레스바 */}
+          <div className="mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                {Math.round((userInput.length / targetText.length) * 100) || 0}% {currentLanguage === 'ko' ? '완료' : 'Complete'}
+                <span className="text-xs text-gray-500 dark:text-gray-400 ml-2">
+                  ({userInput.length}/{targetText.length})
                 </span>
-              )}
+              </div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                {isStarted ? formatTime(stats.elapsed) : '--:--'}
+              </div>
             </div>
-            
-            {isCompleted && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="absolute inset-0 bg-gradient-to-r from-green-500/90 to-emerald-600/90 rounded-lg flex items-center justify-center"
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 relative">
+              <div
+                className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-300 relative overflow-hidden"
+                style={{ width: `${Math.min((userInput.length / targetText.length) * 100, 100)}%` }}
               >
-                <div className="text-center text-white">
-                  <motion.div
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ delay: 0.2, type: "spring" }}
-                    className="text-4xl mb-2"
-                  >
-                    🎉
-                  </motion.div>
-                  <div className="text-2xl font-bold mb-2">
-                    {currentLanguage === 'ko' ? '완료!' : 'Completed!'}
-                  </div>
-                  <div className="text-sm opacity-90">
-                    {speedDisplayMode === 'wpm' ? `${stats.wpm} WPM` : `${stats.cpm} CPM`} • {stats.accuracy}% {currentLanguage === 'ko' ? '정확도' : 'Accuracy'}
-                  </div>
-                </div>
+                {/* 애니메이션 효과 */}
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+              </div>
+
+              {/* 진행률 노브 */}
+              <motion.div
+                className="absolute top-1/2 transform -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg border-2 border-blue-500 flex items-center justify-center transition-opacity duration-200"
+                style={{
+                  left: `${Math.min((userInput.length / targetText.length) * 100, 100)}%`,
+                  marginLeft: '-10px', // 노브 중심이 진행률 끝에 오도록
+                  opacity: isStarted ? 1 : 0
+                }}
+                animate={{
+                  scale: isStarted && !isPaused ? [1, 1.1, 1] : 1
+                }}
+                transition={{
+                  repeat: isStarted && !isPaused ? Infinity : 0,
+                  duration: 2,
+                  ease: "easeInOut"
+                }}
+              >
+                {/* 노브 중앙 점 */}
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
               </motion.div>
+            </div>
+          </div>
+
+          {/* 상태 표시 */}
+          <div className="flex items-center justify-center mb-4">
+            {isCompleted ? (
+              <div className="text-center">
+                <div className="text-lg font-bold text-green-600 dark:text-green-400 mb-1">
+                  🎉 {currentLanguage === 'ko' ? '완료!' : 'Complete!'}
+                </div>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  {currentLanguage === 'ko' ? '2초 후 통계 페이지로 이동...' : 'Redirecting to stats in 2 seconds...'}
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                <Keyboard className="w-4 h-4" />
+                <span>
+                  {!isStarted
+                    ? (currentLanguage === 'ko' ? '타이핑을 시작하세요' : 'Start typing')
+                    : isPaused
+                    ? (currentLanguage === 'ko' ? '일시정지됨' : 'Paused')
+                    : (currentLanguage === 'ko' ? '타이핑 중...' : 'Typing...')
+                  }
+                </span>
+                {isPaused && (
+                  <motion.div
+                    animate={{ opacity: [1, 0.3, 1] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                    className="w-2 h-2 bg-amber-500 rounded-full"
+                  />
+                )}
+              </div>
             )}
           </div>
         </div>
+
+        <div className="flex-1 p-4 flex flex-col space-y-4">
+          {/* 타겟 텍스트 영역 */}
+          <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-blue-100 dark:border-gray-600">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center space-x-2">
+                <span className="w-2 h-2 bg-blue-500 rounded-full"></span>
+                <span>{currentLanguage === 'ko' ? '타이핑할 텍스트' : 'Text to Type'}</span>
+              </h3>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {targetText.length} {currentLanguage === 'ko' ? '글자' : 'chars'}
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-900 rounded-lg p-4 shadow-sm max-h-48 overflow-y-auto">
+              <TextRenderer
+                text={targetText}
+                userInput={userInput}
+                currentIndex={userInput.length}
+                isComposing={isComposing}
+                composingChar={composingChar}
+                errors={errorMap}
+                language={currentLanguage}
+                showCursor={!isCompleted}
+                highlightCurrent={!isCompleted}
+                showSpaces={true}
+              />
+            </div>
+          </div>
+
+          {/* 인풋 영역 */}
+          <div className="bg-gradient-to-br from-emerald-50 to-green-50 dark:from-gray-800 dark:to-gray-700 rounded-xl p-6 border border-emerald-100 dark:border-gray-600">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-200 flex items-center space-x-2">
+                <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                <span>{currentLanguage === 'ko' ? '입력 영역' : 'Input Area'}</span>
+              </h3>
+              <div className="text-xs text-gray-500 dark:text-gray-400">
+                {userInput.length} / {targetText.length}
+              </div>
+            </div>
+
+            <div className="relative">
+              {/* 투명한 입력 필드 - IME 조합 과정 숨김 */}
+              <textarea
+                ref={inputRef}
+                value={userInput}
+                onChange={handleInputChange}
+                onKeyDown={handleKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                onCompositionStart={handleCompositionStart}
+                onCompositionUpdate={handleCompositionUpdate}
+                onCompositionEnd={(e) => handleCompositionEnd(e, handleCompositionComplete)}
+                disabled={isCompleted}
+                placeholder=""
+                style={{
+                  color: 'transparent',
+                  backgroundColor: 'transparent',
+                  caretColor: 'transparent',
+                  textShadow: 'none',
+                  WebkitTextFillColor: 'transparent',
+                  WebkitUserSelect: 'none',
+                  userSelect: 'none',
+                  outline: 'none',
+                  border: 'none'
+                }}
+                className="absolute inset-0 w-full h-32 p-4 text-lg font-mono resize-none z-10 typing-area"
+              />
+
+              {/* 시각적 입력 필드 - 실제 보이는 부분 */}
+              <div className="w-full h-32 p-4 bg-white dark:bg-gray-900 border-2 border-emerald-200 dark:border-gray-600 rounded-lg text-lg font-mono overflow-y-auto focus-within:ring-2 focus-within:ring-emerald-500 focus-within:border-emerald-500 dark:focus-within:ring-emerald-400 transition-all hover:border-emerald-400 dark:hover:border-emerald-500 shadow-sm">
+                {userInput || (
+                  <div className="flex items-center justify-center h-full">
+                    <span className="text-gray-400 dark:text-gray-500 text-center">
+                      {currentLanguage === 'ko'
+                        ? '위 텍스트를 보고 타이핑하세요'
+                        : 'Type the text shown above'}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+            
+        </div>
+
+        {/* 완료 오버레이 */}
+        {isCompleted && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="absolute inset-0 bg-gradient-to-r from-green-500/90 to-emerald-600/90 rounded-xl flex items-center justify-center z-20"
+          >
+            <div className="text-center text-white">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring" }}
+                className="text-4xl mb-2"
+              >
+                🎉
+              </motion.div>
+              <div className="text-2xl font-bold mb-2">
+                {currentLanguage === 'ko' ? '완료!' : 'Completed!'}
+              </div>
+              <div className="text-sm opacity-90">
+                {currentLanguage === 'ko' ? '통계 페이지로 이동 중...' : 'Redirecting to stats...'}
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
     </div>
   );

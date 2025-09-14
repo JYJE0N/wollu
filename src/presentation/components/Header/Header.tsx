@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { BarChart3, Trophy, Home } from 'lucide-react';
+import { BarChart3, Home, Keyboard } from 'lucide-react';
 import { ThemeDropdown, Theme } from './ThemeDropdown';
 
 interface HeaderProps {
@@ -83,16 +83,30 @@ export const Header: React.FC<HeaderProps> = ({
               </span>
             </a>
 
-            {/* 티어/순위 */}
-            <a
-              href="/leaderboard"
-              className="flex items-center space-x-2 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700 transition-colors"
-            >
-              <Trophy className="w-4 h-4" />
-              <span className="hidden sm:block">
-                {currentLanguage === 'ko' ? '티어' : 'Tier'}
-              </span>
-            </a>
+            {/* 키보드 숏컷 안내 */}
+            <div className="flex items-center space-x-3 px-3 py-1">
+              <Keyboard className="w-4 h-4 text-gray-400" />
+              <div className="flex items-center space-x-2 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex items-center space-x-1">
+                  <kbd className="inline-flex items-center px-1 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+                    ⇧+Enter
+                  </kbd>
+                  <span className="hidden sm:inline">{currentLanguage === 'ko' ? '시작' : 'Start'}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <kbd className="inline-flex items-center px-1 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+                    Tab
+                  </kbd>
+                  <span className="hidden sm:inline">{currentLanguage === 'ko' ? '재시작' : 'Restart'}</span>
+                </div>
+                <div className="flex items-center space-x-1">
+                  <kbd className="inline-flex items-center px-1 py-0.5 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+                    Enter
+                  </kbd>
+                  <span className="hidden sm:inline">{currentLanguage === 'ko' ? '새 텍스트' : 'New'}</span>
+                </div>
+              </div>
+            </div>
 
             {/* 구분선 */}
             <div className="w-px h-6 bg-gray-200 dark:bg-gray-700 mx-2"></div>
