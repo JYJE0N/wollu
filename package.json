@@ -4,14 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=development next dev --turbopack",
-    "build": "cross-env NODE_ENV=production next build --turbopack",
-    "start": "cross-env NODE_ENV=production next start",
+    "build": "cross-env NODE_ENV=production next build",
+    "start": "cross-env NODE_ENV=production next start -p ${PORT:-3000}",
     "lint": "cross-env NODE_ENV=development eslint",
     "lint:fix": "cross-env NODE_ENV=development eslint --fix",
     "type-check": "cross-env NODE_ENV=development tsc --noEmit",
     "clean": "cross-env rimraf .next out dist",
     "dev:debug": "cross-env NODE_ENV=development DEBUG=* next dev --turbopack",
-    "build:analyze": "cross-env ANALYZE=true NODE_ENV=production next build --turbopack"
+    "build:analyze": "cross-env ANALYZE=true NODE_ENV=production next build",
+    "build:docker": "docker build -t korean-typing-practice .",
+    "start:docker": "docker run -p 3000:3000 korean-typing-practice"
   },
   "dependencies": {
     "framer-motion": "^12.23.12",
@@ -32,6 +34,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/recharts": "^1.8.29",
     "cross-env": "^10.0.0",
     "eslint": "^9",
     "eslint-config-next": "15.5.2",

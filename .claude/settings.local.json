@@ -12,7 +12,9 @@
       "WebFetch(domain:typing.works)",
       "WebFetch(domain:monkeytype.com)",
       "Bash(git add:*)",
-      "Bash(node:*)"
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Read(//Users/roseline/**)"
     ],
     "deny": [],
     "ask": []

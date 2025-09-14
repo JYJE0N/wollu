@@ -138,7 +138,7 @@ export class UserStatsEntity implements UserStats {
   ) {}
 
   // 새 세션 기록 추가
-  addSessionRecord(session: SessionRecord): { newAchievements: string[]; tierChanged: boolean; oldTier: TierLevel; newTier: TierLevel } {
+  async addSessionRecord(session: SessionRecord): Promise<{ newAchievements: string[]; tierChanged: boolean; oldTier: TierLevel; newTier: TierLevel }> {
     // 이전 통계 저장 (티어 변경 감지용)
     const oldStats = {
       charactersTyped: this.totalCharsTyped,
@@ -163,9 +163,8 @@ export class UserStatsEntity implements UserStats {
       sessions: this.totalSessions
     };
     
-    const { TierSystem } = require('./TierSystem');
+    const { TierSystem } = await import('./TierSystem');
     const tierCheck = TierSystem.checkForPromotion(oldStats, newStats);
-    const oldTier = this.currentTier;
     this.currentTier = TierSystem.calculateTier(
       this.totalCharsTyped,
       this.averageWpm,
@@ -211,7 +210,15 @@ export class UserStatsEntity implements UserStats {
     }
   }
 
-  private updateLanguageStats(languageStats: any, session: SessionRecord): void {
+  private updateLanguageStats(languageStats: {
+    sessions: number;
+    averageWpm: number;
+    averageCpm: number;
+    bestWpm: number;
+    bestCpm: number;
+    averageAccuracy: number;
+    bestAccuracy: number;
+  }, session: SessionRecord): void {
     const prevSessions = languageStats.sessions;
     languageStats.sessions++;
     

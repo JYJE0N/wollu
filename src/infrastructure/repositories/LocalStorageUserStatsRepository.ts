@@ -1,5 +1,5 @@
 import { IUserStatsRepository } from '@/domain/repositories/IUserStatsRepository';
-import { UserStats, SessionRecord, UserStatsEntity } from '@/domain/entities/UserStats';
+import { UserStats, SessionRecord } from '@/domain/entities/UserStats';
 
 export class LocalStorageUserStatsRepository implements IUserStatsRepository {
   private readonly STATS_KEY = 'wollu_user_stats';
@@ -244,7 +244,7 @@ export class LocalStorageUserStatsRepository implements IUserStatsRepository {
   private async updateUsersList(userId: string): Promise<void> {
     try {
       const usersData = localStorage.getItem('wollu_users_list');
-      let userIds: string[] = usersData ? JSON.parse(usersData) : [];
+      const userIds: string[] = usersData ? JSON.parse(usersData) : [];
       
       if (!userIds.includes(userId)) {
         userIds.push(userId);

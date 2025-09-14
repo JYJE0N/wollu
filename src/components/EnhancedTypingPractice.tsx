@@ -7,10 +7,7 @@ import { Trophy, Target, Clock, Zap, RotateCcw } from 'lucide-react';
 import { useTypingStore } from '@/store/typingStore';
 import TextRenderer from '@/presentation/components/Common/TextRenderer';
 import { 
-  isKorean, 
-  getKoreanTypingProgress, 
-  calculateTypingProgress,
-  getTotalKoreanSteps 
+  calculateTypingProgress
 } from '@/utils/koreanUtils';
 
 interface EnhancedTypingPracticeProps {
@@ -105,7 +102,6 @@ export default function EnhancedTypingPractice({ text, onComplete }: EnhancedTyp
   };
 
   const progressPercentage = text ? (currentIndex / text.length) * 100 : 0;
-  const koreanProgressPercentage = text ? calculateTypingProgress(text, userInput) : 0;
 
   const statCards = [
     {

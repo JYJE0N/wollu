@@ -11,7 +11,11 @@ export interface IUserStatsService {
   }>;
   getLeaderboard(sortBy: 'wpm' | 'cpm' | 'accuracy' | 'totalSessions', language?: 'ko' | 'en', limit?: number): Promise<UserStats[]>;
   getUserRank(userId: string, sortBy: 'wpm' | 'cpm' | 'accuracy' | 'totalSessions', language?: 'ko' | 'en'): Promise<{ rank: number; total: number; percentile: number }>;
-  getGlobalStats(period: 'daily' | 'weekly' | 'monthly'): Promise<any>;
+  getGlobalStats(period: 'daily' | 'weekly' | 'monthly'): Promise<{
+    topUsers: UserStats[];
+    totalUsers: number;
+    totalSessions: number;
+  }>;
 }
 
 export class UserStatsService implements IUserStatsService {
@@ -108,8 +112,18 @@ export class UserStatsService implements IUserStatsService {
     return { rank, total, percentile };
   }
 
-  async getGlobalStats(period: 'daily' | 'weekly' | 'monthly') {
-    return await this.userStatsRepository.getGlobalStats(period);
+  async getGlobalStats(period: 'daily' | 'weekly' | 'monthly'): Promise<{
+    topUsers: UserStats[];
+    totalUsers: number;
+    totalSessions: number;
+  }> {
+    const stats = await this.userStatsRepository.getGlobalStats(period);
+    // 임시로 topUsers를 빈 배열로 반환
+    return {
+      topUsers: [],
+      totalUsers: stats.totalUsers,
+      totalSessions: stats.totalSessions
+    };
   }
 
   private generateSessionId(): string {

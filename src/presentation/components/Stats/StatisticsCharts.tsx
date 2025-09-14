@@ -317,7 +317,7 @@ export const StatisticsCharts: React.FC<StatisticsChartsProps> = ({
                   outerRadius={100}
                   paddingAngle={5}
                   dataKey="value"
-                  label={({ name, value, percent }) => 
+                  label={({ name, value, percent }: any) => 
                     `${name}: ${value} (${(percent * 100).toFixed(1)}%)`
                   }
                 >

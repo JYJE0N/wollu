@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-hot-toast';
 import { ToastProvider } from '@/components/ToastProvider';
-import { TypingPracticeView } from './TypingPracticeView';
 import { Header } from './Header/Header';
 import { Footer } from './Footer/Footer';
 import { MainContent } from './Main/MainContent';
@@ -12,8 +11,8 @@ import { Language, getAllLanguages } from '@/data/languages';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function App() {
-  const [currentText, setCurrentText] = useState('');
   const [practiceMode, setPracticeMode] = useState<'sentence' | 'words'>('sentence');
+  const [currentText, setCurrentText] = useState('');
   // difficulty는 더 이상 사용하지 않음 - sentenceType으로 대체
   const [currentLanguage, setCurrentLanguage] = useState<Language>('ko');
   const [isInitialized, setIsInitialized] = useState(false);
@@ -38,30 +37,13 @@ export default function App() {
   }, [currentLanguage]);
 
 
-  const handleNewText = useCallback((showToast: boolean = true) => {
-    const newText = practiceMode === 'sentence' 
-      ? textRepository.getSentenceByTypeAndVariant(sentenceType, sentenceVariant)
-      : textRepository.getRandomWords(wordCount);
-    setCurrentText(newText);
-    if (showToast) {
-      const message = currentLanguage === 'ko' 
-        ? `새로운 ${practiceMode === 'sentence' ? '문장' : '단어'} 연습!`
-        : `New ${practiceMode === 'sentence' ? 'sentence' : 'word'} practice!`;
-      toast.success(message);
-    }
-  }, [practiceMode, sentenceType, sentenceVariant, wordCount, currentLanguage, textRepository]);
-
   const handleModeChange = useCallback((mode: 'sentence' | 'words') => {
     setPracticeMode(mode);
-    const newText = mode === 'sentence' 
-      ? textRepository.getSentenceByTypeAndVariant(sentenceType, sentenceVariant)
-      : textRepository.getRandomWords(wordCount);
-    setCurrentText(newText);
     const message = currentLanguage === 'ko'
       ? `${mode === 'sentence' ? '문장' : '단어'} 연습 모드로 변경!`
       : `Changed to ${mode === 'sentence' ? 'sentence' : 'word'} practice mode!`;
     toast.success(message);
-  }, [sentenceType, sentenceVariant, wordCount, currentLanguage, textRepository]);
+  }, [currentLanguage]);
 
   // difficulty 관련 핸들러는 더 이상 사용하지 않음
 

@@ -1,4 +1,4 @@
-import { disassemble, assemble } from 'hangul-js';
+import { disassemble } from 'hangul-js';
 
 export class TypingStats {
   constructor(
