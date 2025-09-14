@@ -2,12 +2,16 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Shuffle, Zap, Target, RotateCcw } from 'lucide-react';
+import { BookOpen, Shuffle, Zap, Target, RotateCcw, Settings2, Keyboard } from 'lucide-react';
 import { Language } from '@/data/languages';
+import { PracticeToggle } from '../Common/PracticeToggle';
+import { LanguageToggle } from '../Header/LanguageToggle';
+import { SettingsPanel } from '../Header/SettingsPanel';
 
 interface QuickActionsProps {
   practiceMode: 'sentence' | 'words';
   currentLanguage: Language;
+  onLanguageToggle: () => void;
   onPracticeModeChange: (mode: 'sentence' | 'words') => void;
   wordCount: number;
   onWordCountChange: (count: number) => void;
@@ -22,6 +26,7 @@ interface QuickActionsProps {
 export const QuickActions: React.FC<QuickActionsProps> = ({
   practiceMode,
   currentLanguage,
+  onLanguageToggle,
   onPracticeModeChange,
   wordCount,
   onWordCountChange,
@@ -78,34 +83,39 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
 
   return (
     <div className="flex flex-col space-y-6">
+      {/* 첫 번째 줄: 언어 선택과 설정 */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-4">
+          <LanguageToggle
+            currentLanguage={currentLanguage}
+            onToggle={onLanguageToggle}
+          />
+          <div className="w-px h-6 bg-gray-300 dark:bg-gray-600"></div>
+          <PracticeToggle
+            practiceMode={practiceMode}
+            onToggle={onPracticeModeChange}
+            currentLanguage={currentLanguage}
+            disabled={isTypingActive}
+          />
+        </div>
+        <div className="flex items-center">
+          <SettingsPanel
+            currentLanguage={currentLanguage}
+            practiceMode={practiceMode}
+            onModeChange={onPracticeModeChange}
+            wordCount={wordCount}
+            onWordCountChange={onWordCountChange}
+            sentenceType={sentenceType}
+            onSentenceTypeChange={onSentenceTypeChange}
+            sentenceVariant={sentenceVariant}
+            onSentenceVariantChange={onSentenceVariantChange}
+          />
+        </div>
+      </div>
+
+      {/* 두 번째 줄: 모드별 옵션 */}
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center space-y-4 lg:space-y-0">
         <div className="flex items-center space-x-4">
-          <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-1">
-            <button
-              onClick={() => onPracticeModeChange('sentence')}
-              disabled={isTypingActive}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                practiceMode === 'sentence'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              } ${isTypingActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <BookOpen className="w-4 h-4" />
-              <span>{currentLanguage === 'ko' ? '문장 연습' : 'Sentences'}</span>
-            </button>
-            <button
-              onClick={() => onPracticeModeChange('words')}
-              disabled={isTypingActive}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-md text-sm font-medium transition-all ${
-                practiceMode === 'words'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'
-              } ${isTypingActive ? 'opacity-50 cursor-not-allowed' : ''}`}
-            >
-              <Zap className="w-4 h-4" />
-              <span>{currentLanguage === 'ko' ? '단어 연습' : 'Words'}</span>
-            </button>
-          </div>
 
           {practiceMode === 'sentence' && (
             <motion.div 
@@ -219,6 +229,51 @@ export const QuickActions: React.FC<QuickActionsProps> = ({
               {currentLanguage === 'ko' ? '다시 시작' : 'Restart'}
             </span>
           </motion.button>
+        </div>
+      </div>
+
+      {/* 세 번째 줄: 숏컷 안내 */}
+      <div className="flex items-center justify-center py-3 bg-white/50 dark:bg-gray-800/30 rounded-lg border border-gray-200/50 dark:border-gray-700/50 backdrop-blur-sm">
+        <div className="flex items-center space-x-6 text-sm text-gray-600 dark:text-gray-400">
+          <div className="flex items-center space-x-2">
+            <Keyboard className="w-4 h-4" />
+            <span className="text-xs font-medium">{currentLanguage === 'ko' ? '단축키' : 'Shortcuts'}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <kbd className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+              ⇧Enter
+            </kbd>
+            <span className="text-xs">{currentLanguage === 'ko' ? '시작' : 'Start'}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <kbd className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+              Tab
+            </kbd>
+            <span className="text-xs">{currentLanguage === 'ko' ? '재시작' : 'Restart'}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <kbd className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+              Enter
+            </kbd>
+            <span className="text-xs">{currentLanguage === 'ko' ? '새 텍스트' : 'New Text'}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <kbd className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+              Esc
+            </kbd>
+            <span className="text-xs">{currentLanguage === 'ko' ? '일시정지' : 'Pause'}</span>
+          </div>
+
+          <div className="flex items-center space-x-1">
+            <kbd className="inline-flex items-center px-2 py-1 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded text-xs font-mono shadow-sm">
+              Esc×2
+            </kbd>
+            <span className="text-xs">{currentLanguage === 'ko' ? '초기화' : 'Reset'}</span>
+          </div>
         </div>
       </div>
     </div>

@@ -96,24 +96,16 @@ export default function App() {
     <>
       <ToastProvider />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-        <Header 
+        <Header
           currentLanguage={currentLanguage}
-          onLanguageToggle={handleLanguageToggle}
           currentTheme={theme}
           onThemeChange={setTheme}
-          practiceMode={practiceMode}
-          onModeChange={handleModeChange}
-          wordCount={wordCount}
-          onWordCountChange={handleWordCountChange}
-          sentenceType={sentenceType}
-          onSentenceTypeChange={handleSentenceTypeChange}
-          sentenceVariant={sentenceVariant}
-          onSentenceVariantChange={handleSentenceVariantChange}
         />
         
 
-        <MainContent 
+        <MainContent
           currentLanguage={currentLanguage}
+          onLanguageToggle={handleLanguageToggle}
           currentTheme={theme}
           practiceMode={practiceMode}
           onModeChange={handleModeChange}

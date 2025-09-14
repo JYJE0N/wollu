@@ -9,6 +9,7 @@ import { Theme } from '@/hooks/useTheme';
 
 interface MainContentProps {
   currentLanguage: Language;
+  onLanguageToggle: () => void;
   currentTheme: Theme;
   practiceMode: 'sentence' | 'words';
   onModeChange: (mode: 'sentence' | 'words') => void;
@@ -22,6 +23,7 @@ interface MainContentProps {
 
 export const MainContent: React.FC<MainContentProps> = ({
   currentLanguage,
+  onLanguageToggle,
   currentTheme,
   practiceMode,
   onModeChange,
@@ -139,9 +141,10 @@ export const MainContent: React.FC<MainContentProps> = ({
             transition={{ delay: 0.2, duration: 0.5 }}
             className="mb-8"
           >
-            <QuickActions 
+            <QuickActions
               practiceMode={practiceMode}
               currentLanguage={currentLanguage}
+              onLanguageToggle={onLanguageToggle}
               onPracticeModeChange={onModeChange}
               wordCount={wordCount}
               onWordCountChange={onWordCountChange}
