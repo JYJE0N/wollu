@@ -15,10 +15,13 @@ export async function GET() {
     }
   };
 
-  return NextResponse.json(healthCheck, { 
+  return NextResponse.json(healthCheck, {
     status: 200,
     headers: {
       'Cache-Control': 'no-cache, no-store, must-revalidate',
+      'Content-Type': 'application/json',
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Methods': 'GET',
     }
   });
 }

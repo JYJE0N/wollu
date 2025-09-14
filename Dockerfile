@@ -34,6 +34,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
+# API 라우트를 위한 추가 복사 (Next.js 15 호환성)
+COPY --from=builder --chown=nextjs:nodejs /app/.next/server ./.next/server
+
 USER nextjs
 
 EXPOSE 3000
