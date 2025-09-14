@@ -23,7 +23,6 @@ const nextConfig: NextConfig = {
   },
   
   // 빌드 최적화
-  swcMinify: true,
   productionBrowserSourceMaps: false,
   
   // 캐싱 최적화

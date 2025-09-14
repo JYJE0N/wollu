@@ -106,19 +106,10 @@ export default function StatsPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col">
-      <Header 
+      <Header
         currentLanguage="ko"
-        onLanguageToggle={() => {}}
         currentTheme="light"
         onThemeChange={() => {}}
-        practiceMode="sentence"
-        onModeChange={() => {}}
-        wordCount={25}
-        onWordCountChange={() => {}}
-        sentenceType="medium"
-        onSentenceTypeChange={() => {}}
-        sentenceVariant="basic"
-        onSentenceVariantChange={() => {}}
       />
 
       <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
